@@ -5,6 +5,8 @@ Look at the [nuxt 3 documentation](https://v3.nuxtjs.org) to learn more.
 # Configuration
 
 - [@antfu/eslint-config](https://github.com/antfu/eslint-config)
+- [UnoCSS](https://github.com/unocss/unocss)
+- [Iconify with UnoCSS](https://github.com/unocss/unocss/tree/main/packages/preset-icons/)
 
 ## Setup
 

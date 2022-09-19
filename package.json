@@ -11,6 +11,9 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.27.0",
+    "@iconify/json": "^2.1.108",
+    "@unocss/nuxt": "^0.45.21",
+    "@unocss/preset-icons": "^0.45.21",
     "nuxt": "3.0.0-rc.10"
   }
 }
