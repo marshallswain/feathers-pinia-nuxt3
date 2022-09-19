@@ -2,6 +2,10 @@
 
 Look at the [nuxt 3 documentation](https://v3.nuxtjs.org) to learn more.
 
+# Configuration
+
+- [@antfu/eslint-config](https://github.com/antfu/eslint-config)
+
 ## Setup
 
 Make sure to install the dependencies:
