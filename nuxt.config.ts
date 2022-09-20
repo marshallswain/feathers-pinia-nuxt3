@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   modules: [
     '@unocss/nuxt',
     '@vueuse/nuxt',
+    '@nuxtjs/color-mode',
   ],
   unocss: {
     // presets
@@ -13,5 +14,11 @@ export default defineNuxtConfig({
     // core options
     shortcuts: [],
     rules: [],
+  },
+  colorMode: {
+    preference: 'system',
+    fallback: 'light',
+    classPrefix: 'theme-',
+    classSuffix: '',
   },
 })
