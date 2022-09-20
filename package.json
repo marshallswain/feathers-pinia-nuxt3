@@ -16,7 +16,7 @@
     "@feathersjs/feathers": "^5.0.0-pre.29",
     "@feathersjs/rest-client": "^5.0.0-pre.29",
     "@feathersjs/socketio-client": "^5.0.0-pre.29",
-    "@iconify/json": "^2.1.108",
+    "@iconify/json": "^2.1.109",
     "@nuxtjs/color-mode": "^3.1.5",
     "@pinia/nuxt": "^0.4.2",
     "@unocss/nuxt": "^0.45.21",
