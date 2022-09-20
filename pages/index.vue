@@ -1,5 +1,15 @@
+<script setup lang="ts">
+const { $api } = useFeathers()
+const { User, userStore } = useUsers()
+const { Task, taskStore } = useTasks()
+
+const user = new User()
+</script>
+
 <template>
   <div>
-    Home
+    <h1>Home</h1>
+
+    <p>{{ user }}</p>
   </div>
 </template>

@@ -1,3 +1,4 @@
+<!-- eslint-disable no-console -->
 <script setup lang="ts">
 // https://v3.nuxtjs.org/api/composables/use-head
 useHead({
@@ -14,6 +15,8 @@ useHead({
   bodyAttrs: {},
   htmlAttrs: {},
 })
+
+console.log('in app.vue')
 </script>
 
 <template>
