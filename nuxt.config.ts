@@ -21,4 +21,7 @@ export default defineNuxtConfig({
     classPrefix: 'theme-',
     classSuffix: '',
   },
+  typescript: {
+    shim: false,
+  },
 })
