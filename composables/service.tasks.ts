@@ -4,13 +4,21 @@ export const useTasks = () => {
   const { $api, $defineStore, $pinia } = useNuxtApp()
 
   const servicePath = 'tasks'
-  const useTasks = $defineStore({ servicePath, Model: Task })
-  const taskStore = useTasks($pinia)
+  const useStore = $defineStore({
+    servicePath,
+    Model: Task,
+    state() {
+      return {}
+    },
+    getters: {} as any,
+    actions: {} as any,
+  })
+  const store = useStore($pinia)
 
   $api.service(servicePath).hooks({})
 
   return {
-    taskStore,
-    Task: Task as typeof taskStore.Model,
+    taskStore: store,
+    Task: Task as typeof store.Model,
   }
 }

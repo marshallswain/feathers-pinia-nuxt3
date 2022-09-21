@@ -4,13 +4,21 @@ export const useUsers = () => {
   const { $api, $defineStore, $pinia } = useNuxtApp()
 
   const servicePath = 'users'
-  const useUsers = $defineStore({ servicePath, Model: User })
-  const userStore = useUsers($pinia)
+  const useStore = $defineStore({
+    servicePath,
+    Model: User,
+    state() {
+      return {}
+    },
+    getters: {} as any,
+    actions: {} as any,
+  })
+  const store = useStore($pinia)
 
   $api.service(servicePath).hooks({})
 
   return {
-    userStore,
-    User: User as typeof userStore.Model,
+    userStore: store,
+    User: User as typeof store.Model,
   }
 }
