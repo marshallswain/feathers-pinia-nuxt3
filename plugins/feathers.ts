@@ -9,7 +9,7 @@ import { feathers } from '@feathersjs/feathers'
 import { OhMyFetch, setupFeathersPinia } from 'feathers-pinia'
 
 export default defineNuxtPlugin(async (_nuxtApp) => {
-  // Configuring the client in a plugin avoids stateful data and
+  // Creating the Feathers client in a plugin avoids stateful data and
   // prevents information from leaking between user sessions.
   const api = feathers()
   const { defineStore } = setupFeathersPinia({

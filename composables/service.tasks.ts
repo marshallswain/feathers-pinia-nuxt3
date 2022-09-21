@@ -9,5 +9,8 @@ export const useTasks = () => {
 
   $api.service(servicePath).hooks({})
 
-  return { Task, taskStore }
+  return {
+    taskStore,
+    Task: Task as typeof taskStore.Model,
+  }
 }

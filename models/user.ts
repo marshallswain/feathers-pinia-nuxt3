@@ -3,7 +3,7 @@ import { BaseModel, associateFind } from 'feathers-pinia'
 import type { Task } from './task'
 
 export class User extends BaseModel {
-  _id?: number | string
+  _id?: string
   name = ''
   email = ''
   password = ''

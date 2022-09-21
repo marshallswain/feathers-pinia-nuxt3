@@ -9,5 +9,8 @@ export const useUsers = () => {
 
   $api.service(servicePath).hooks({})
 
-  return { User, userStore }
+  return {
+    userStore,
+    User: User as typeof userStore.Model,
+  }
 }
