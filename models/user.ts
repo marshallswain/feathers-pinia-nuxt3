@@ -1,7 +1,20 @@
-import type { AssociateFindUtils } from 'feathers-pinia'
-import { BaseModel, associateFind } from 'feathers-pinia'
-import type { Task } from './task'
+import type { User, UserData, UserQuery } from 'feathers-pinia-api'
+import { type ModelInstance, useFeathersModel, useInstanceDefaults } from 'feathers-pinia'
+import { api } from '../feathers'
 
+const service = api.service('users')
+
+const ModelFn = (data: ModelInstance<User>) => {
+  const withDefaults = useInstanceDefaults(
+    { name: '', email: '', password: '' },
+    data,
+  )
+  return withDefaults
+}
+const Task = useFeathersModel<User, UserData, UserQuery, typeof ModelFn>(
+  { name: 'Task', idField: '_id', service },
+  ModelFn,
+)
 export class User extends BaseModel {
   _id?: string
   name = ''
@@ -19,8 +32,6 @@ export class User extends BaseModel {
 
   // optional for setting up data objects and/or associations
   static setupInstance(user: Partial<User>) {
-    const { Task } = useTasks()
-
     associateFind(user as any, 'tasks', {
       Model: Task,
       makeParams: () => ({ query: { userId: user._id } }),

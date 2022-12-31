@@ -1,13 +1,16 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 export default defineNuxtRouteMiddleware(async (to, _from) => {
-  const nuxt = useNuxtApp()
+  const authStore = useAuthStore()
 
-  console.log('in session middleware')
+  // Allow 404 page to show
+  const router = useRouter()
+  const allRoutes = router.getRoutes()
+  if (!allRoutes.map(r => r.path).includes(to.path))
+    return
 
-  // if (to.params.id === '1')
-  //   return abortNavigation()
-
-  // return navigateTo(to)
+  // if user is not logged in, redirect to '/' when not navigating to a public page.
+  const publicRoutes = ['/', '/login']
+  if (!authStore.user?.value) {
+    if (!publicRoutes.includes(to.path))
+      return navigateTo('/')
+  }
 })

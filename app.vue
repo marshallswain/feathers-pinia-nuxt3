@@ -3,9 +3,9 @@
 // https://v3.nuxtjs.org/api/composables/use-head
 useHead({
   title: 'Feathers-Pinia',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
-  charset: 'utf-8',
   meta: [
+    { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1' },
+    { name: 'charset', content: 'utf-8' },
     { name: 'description', content: 'Feathers-Pinia Example App' },
   ],
   script: [],
@@ -17,6 +17,7 @@ useHead({
 })
 
 console.log('in app.vue')
+const { user } = useAuthStore()
 </script>
 
 <template>

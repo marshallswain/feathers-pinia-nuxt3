@@ -2,27 +2,22 @@
 export default defineNuxtConfig({
   modules: [
     '@pinia/nuxt',
-    '@unocss/nuxt',
+    '@nuxtjs/tailwindcss',
     '@vueuse/nuxt',
     '@nuxtjs/color-mode',
+    'daisy-ui-kit/nuxt',
   ],
-  unocss: {
-    // presets
-    uno: true, // enabled `@unocss/preset-uno`
-    icons: true, // enabled `@unocss/preset-icons`
-    attributify: true, // enabled `@unocss/preset-attributify`,
-
-    // core options
-    shortcuts: [],
-    rules: [],
-  },
   colorMode: {
     preference: 'system',
-    fallback: 'light',
-    classPrefix: 'theme-',
+    // fallback: 'light',
+    // classPrefix: '',
+    dataValue: 'theme',
     classSuffix: '',
   },
   typescript: {
     shim: false,
+  },
+  experimental: {
+    reactivityTransform: true,
   },
 })

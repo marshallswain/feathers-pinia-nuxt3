@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import '~/assets/reset.css'
+
 </script>
 
 <template>
   <main>
-    Layout
-    <slot />
+    <div class="m-2">
+      <slot />
+    </div>
   </main>
 </template>
