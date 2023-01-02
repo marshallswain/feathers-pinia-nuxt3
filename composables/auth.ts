@@ -3,9 +3,9 @@ import { useAuth } from 'feathers-pinia'
 
 export const useAuthStore = defineStore('auth', () => {
   const { api } = useFeathers()
-  const User = useUserModel()
+  const userStore = useUserStore()
 
-  const utils = useAuth({ api, userStore: User.store })
+  const utils = useAuth({ api, userStore })
 
   return { ...utils }
 })

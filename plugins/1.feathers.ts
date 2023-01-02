@@ -33,10 +33,7 @@ export default defineNuxtPlugin(async (_nuxtApp) => {
   // create the api client
   const api = createClient(connection, { storage, storageKey })
 
-  // a place to store Model functions for each request
-  const models: Record<string, any> = {}
-
   return {
-    provide: { api, models },
+    provide: { api },
   }
 })

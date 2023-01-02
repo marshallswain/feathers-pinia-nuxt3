@@ -6,7 +6,14 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@nuxtjs/color-mode',
     'daisy-ui-kit/nuxt',
+    'nuxt-feathers-pinia',
   ],
+  imports: {
+    dirs: [
+      'stores',
+      'models',
+    ],
+  },
   colorMode: {
     preference: 'system',
     // fallback: 'light',

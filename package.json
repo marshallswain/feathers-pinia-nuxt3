@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "feathers-pinia-api": "http://localhost:3030/feathers-pinia-api-0.0.0.tgz",
+    "nuxt-feathers-pinia": "^0.0.1",
     "ofetch": "^1.0.0"
   }
 }
