@@ -2,6 +2,8 @@
 
 Look at the [nuxt 3 documentation](https://v3.nuxtjs.org) to learn more.
 
+In order to use this repo, you need a working FeathersJS server. You can find one at the feathers-pinia-api repo.
+
 # Configuration
 
 - [Feathers-Pinia](https://v1.feathers-pinia.pages.dev) with two example services.
