@@ -2,9 +2,9 @@
  * Returns a global configuration object for Feathers-Pinia
  */
 export const useFeathersPiniaConfig = () => {
-  const { $pinia } = useNuxtApp()
+  const { $pinia: pinia } = useNuxtApp()
   return {
-    $pinia,
+    pinia,
     idField: '_id',
     whitelist: ['$regex'],
   }
