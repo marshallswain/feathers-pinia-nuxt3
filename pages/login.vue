@@ -2,6 +2,7 @@
 import { useVuelidate } from '@vuelidate/core'
 import { email, helpers, minLength, required, sameAs } from '@vuelidate/validators'
 import { _ } from '@feathersjs/commons'
+const router = useRouter()
 
 const authStore = useAuthStore()
 const User = useUserModel()
@@ -30,20 +31,32 @@ const conditionalRules = computed(() => {
 })
 const v$ = useVuelidate(conditionalRules, state)
 
-const authenticate = () => {
-  authStore.authenticate({ strategy: 'local', ...state })
+const loginAndRedirect = (data: { email: string; password: string }) => {
+  authStore
+    .authenticate({ strategy: 'local', ...state })
+    .then(() => {
+      const redirectTo = authStore.loginRedirect || '/app'
+      authStore.loginRedirect = null
+      router.push(redirectTo)
+    })
+    .catch((error: any) => {
+      // eslint-disable-next-line no-console
+      console.log(error)
+    })
 }
 const handleLogin = async () => {
   const isValid = await v$.value.$validate()
-  if (isValid)
-    authenticate()
+  if (isValid) {
+    const { email, password } = state
+    loginAndRedirect({ email, password })
+  }
 }
 const handleSignup = async () => {
   const isValid = await v$.value.$validate()
   if (isValid) {
     const { email, password } = state
-    await User({ email, password }).save()
-    authenticate()
+    const user = await User({ email, password }).save()
+    loginAndRedirect({ email, password })
   }
 }
 </script>

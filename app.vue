@@ -16,7 +16,6 @@ useHead({
   htmlAttrs: {},
 })
 
-console.log('in app.vue')
 const { user } = useAuthStore()
 </script>
 

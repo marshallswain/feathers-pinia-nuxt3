@@ -1,5 +1,8 @@
+// middleware/session.global.ts
 export default defineNuxtRouteMiddleware(async (to, _from) => {
-  const authStore = useAuthStore()
+  const auth = useAuthStore()
+
+  await auth.getPromise()
 
   // Allow 404 page to show
   const router = useRouter()
@@ -9,7 +12,7 @@ export default defineNuxtRouteMiddleware(async (to, _from) => {
 
   // if user is not logged in, redirect to '/' when not navigating to a public page.
   const publicRoutes = ['/', '/login']
-  if (!authStore.user?.value) {
+  if (!auth.user) {
     if (!publicRoutes.includes(to.path))
       return navigateTo('/')
   }
