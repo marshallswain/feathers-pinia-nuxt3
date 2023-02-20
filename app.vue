@@ -15,8 +15,6 @@ useHead({
   bodyAttrs: {},
   htmlAttrs: {},
 })
-
-const { user } = useAuthStore()
 </script>
 
 <template>
@@ -24,10 +22,3 @@ const { user } = useAuthStore()
     <NuxtPage />
   </NuxtLayout>
 </template>
-
-<style>
-.theme-dark body {
-  background-color: black;
-  color: white;
-}
-</style>
