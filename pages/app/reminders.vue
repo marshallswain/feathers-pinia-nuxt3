@@ -6,7 +6,7 @@ definePageMeta({
 
 <template>
   <DaisyFlex col items-center class="h-full gap-2">
-    <div class="mt-16" />
+    <div class="mt-8" />
 
     <TaskList />
   </DaisyFlex>
