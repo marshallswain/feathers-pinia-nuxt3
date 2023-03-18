@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// import Logo from '~icons/logos/feathersjs'
 // import UserIcon from '~icons/feather/user'
 // import ChevronDownIcon from '~icons/feather/chevron-down'
 // import LoginIcon from '~icons/feather/log-in'
@@ -16,33 +15,36 @@ const logout = async () => {
 <template>
   <DaisyNavbar class="bg-neutral/30">
     <DaisyNavbarStart>
-      <RouterLink to="/" class="flex flex-row gap-2 items-center">
-        <!-- <Logo class="text-2xl bg-white rounded-full" /> -->
-        <DaisyText size="xl">
-          Feathers-Pinia + Vite
+      <NuxtLink to="/" class="flex flex-row gap-2 items-center">
+        <i class="icon-[logos--feathersjs] text-2xl bg-white rounded-full" />
+        <DaisyText class="text-sm lg:text-xl">
+          Feathers-Pinia
         </DaisyText>
-      </RouterLink>
+      </NuxtLink>
     </DaisyNavbarStart>
 
     <DaisyNavbarCenter>
       <DaisyButtonGroup>
-        <RouterLink v-slot="{ isActive, navigate }" to="/app" custom>
-          <DaisyButton :primary="isActive" @click="navigate">
-            App Home
+        <NuxtLink v-slot="{ isActive, navigate }" to="/app" custom>
+          <DaisyButton :primary="isActive" class="transition-all duration-300 gap-2 btn-sm sm:btn-md" @click="navigate">
+            <i class="icon-[feather--home] text-xl" />
+            <span class="hidden lg:inline-block">Home</span>
           </DaisyButton>
-        </RouterLink>
+        </NuxtLink>
 
-        <RouterLink v-slot="{ isActive, navigate }" to="/app/reminders" custom>
-          <DaisyButton :primary="isActive" @click="navigate">
-            Reminders
+        <NuxtLink v-slot="{ isActive, navigate }" to="/app/reminders" custom>
+          <DaisyButton :primary="isActive" class="transition-all duration-300 gap-2 btn-sm sm:btn-md" @click="navigate">
+            <i class="icon-[feather--list] text-xl" />
+            <span class="hidden lg:inline-block">Reminders</span>
           </DaisyButton>
-        </RouterLink>
+        </NuxtLink>
 
-        <RouterLink v-slot="{ navigate, route }" to="/app/contacts" custom>
-          <DaisyButton :primary="route.path.startsWith('/app/contacts')" @click="navigate">
-            Contacts
+        <NuxtLink v-slot="{ navigate, isActive }" to="/app/contacts" custom>
+          <DaisyButton :primary="isActive" class="transition-all duration-300 gap-2 btn-sm sm:btn-md" @click="navigate">
+            <i class="icon-[feather--users] text-xl" />
+            <span class="hidden lg:inline-block">Contacts</span>
           </DaisyButton>
-        </RouterLink>
+        </NuxtLink>
       </DaisyButtonGroup>
     </DaisyNavbarCenter>
 
@@ -50,29 +52,31 @@ const logout = async () => {
       <DaisyDropdown v-if="authStore.user" end>
         <DaisyButton circle class="relative">
           <!-- <UserIcon class="text-xl" /> -->
-          <!-- <ChevronDownIcon class="absolute right-1 text-[9px]" /> -->
+          <i class="icon-[feather--user] text-xl" />
+          <i class="icon-[fe--drop-down] absolute right-1 text-[9px]" />
         </DaisyButton>
         <DaisyDropdownContent>
           <DaisyMenu class="bg-base-300 shadow-lg rounded-lg whitespace-nowrap">
             <DaisyMenuItem>
-              <RouterLink to="/app/me">
-                My Account
-              </RouterLink>
+              <NuxtLink to="/app/me">
+                <i class="icon-[feather--user] text-xl" />
+                My Profile
+              </NuxtLink>
             </DaisyMenuItem>
             <DaisyMenuItem>
-              <a href="javascript://" @click="logout">Logout</a>
+              <a href="javascript://" @click="logout"><i class="icon-[feather--log-out]" /> Logout</a>
             </DaisyMenuItem>
           </DaisyMenu>
         </DaisyDropdownContent>
       </DaisyDropdown>
 
-      <RouterLink v-else to="/login">
+      <NuxtLink v-else to="/login">
         <DaisyTooltip bottom tip="Login">
           <DaisyButton circle>
-            <!-- <LoginIcon /> -->
+            <i class="icon-[feather--log-in]" />
           </DaisyButton>
         </DaisyTooltip>
-      </RouterLink>
+      </NuxtLink>
     </DaisyNavbarEnd>
   </DaisyNavbar>
 </template>
