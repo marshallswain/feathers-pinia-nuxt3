@@ -13,7 +13,7 @@ definePageMeta({
       </DaisyDrawerLayoutContent>
 
       <DaisyDrawer v-slot="{ closeDrawer }" class="rounded-box border border-base-200">
-        <DaisyMenu class="relative p-3 overflow-y-auto menu w-80 ">
+        <DaisyMenu class="relative p-3 overflow-y-auto menu w-full sm:w-80 bg-base-100 rounded-lg">
           <RouterLink v-slot="{ isActive, navigate }" to="/app/contacts/new" custom>
             <DaisyButton :primary="isActive" :neutral="!isActive" @click="navigate">
               Create Contact
