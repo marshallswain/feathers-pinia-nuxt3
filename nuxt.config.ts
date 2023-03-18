@@ -7,6 +7,7 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     'daisy-ui-kit/nuxt',
     'nuxt-feathers-pinia',
+    '@formkit/nuxt',
   ],
   imports: {
     dirs: [
