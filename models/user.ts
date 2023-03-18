@@ -1,11 +1,11 @@
 import { type ModelInstance, feathersPiniaHooks, useFeathersModel, useInstanceDefaults } from 'feathers-pinia'
-import type { User, UserData, UserQuery } from 'feathers-pinia-api'
+import type { Users, UsersData, UsersQuery } from 'feathers-pinia-api'
 
 export const useUsersConfig = () => {
   const { pinia, idField, whitelist } = useFeathersPiniaConfig()
   const servicePath = 'users'
-  const service = useFeathersService<User, UserQuery>(servicePath)
-  const name = 'User'
+  const service = useFeathersService<Users, UsersQuery>(servicePath)
+  const name = 'Users'
 
   return { pinia, idField, whitelist, servicePath, service, name }
 }
@@ -14,7 +14,7 @@ export const useUserModel = () => {
   const { idField, service, name } = useUsersConfig()
 
   const Model = useModel(name, () => {
-    const modelFn = (data: ModelInstance<User>) => {
+    const modelFn = (data: ModelInstance<Users>) => {
       const defaults = {
         email: '',
         password: '',
@@ -32,7 +32,7 @@ export const useUserModel = () => {
       // })
       return withDefaults
     }
-    return useFeathersModel<User, UserData, UserQuery, typeof modelFn>(
+    return useFeathersModel<Users, UsersData, UsersQuery, typeof modelFn>(
       { name, idField, service },
       modelFn,
     )
