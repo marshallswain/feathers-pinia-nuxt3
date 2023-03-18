@@ -1,8 +1,4 @@
 <script setup lang="ts">
-// import UserIcon from '~icons/feather/user'
-// import ChevronDownIcon from '~icons/feather/chevron-down'
-// import LoginIcon from '~icons/feather/log-in'
-
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -16,8 +12,8 @@ const logout = async () => {
   <DaisyNavbar class="bg-neutral/30">
     <DaisyNavbarStart>
       <NuxtLink to="/" class="flex flex-row gap-2 items-center">
-        <i class="icon-[logos--feathersjs] text-2xl bg-white rounded-full" />
-        <DaisyText class="text-sm lg:text-xl">
+        <i class="icon-[logos--feathersjs] text-2xl bg-white rounded-full flex-shrink-0" />
+        <DaisyText class="text-xs sm:text-sm lg:text-xl">
           Feathers-Pinia
         </DaisyText>
       </NuxtLink>
