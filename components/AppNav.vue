@@ -51,7 +51,6 @@ const logout = async () => {
     <DaisyNavbarEnd>
       <DaisyDropdown v-if="authStore.user" end>
         <DaisyButton circle class="relative">
-          <!-- <UserIcon class="text-xl" /> -->
           <i class="icon-[feather--user] text-xl" />
           <i class="icon-[fe--drop-down] absolute right-1 text-[9px]" />
         </DaisyButton>
