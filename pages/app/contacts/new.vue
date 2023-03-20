@@ -3,6 +3,12 @@ defineEmits(['openDrawer'])
 definePageMeta({
   layout: 'app',
 })
+
+async function createContact(fields: any) {
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  // eslint-disable-next-line no-console
+  console.log(fields)
+}
 </script>
 
 <template>
@@ -13,30 +19,7 @@ definePageMeta({
           Add Contact
         </DaisyCardTitle>
 
-        <FormKit type="form">
-          <DaisyFlex row class="gap-3">
-            <div class="w-full md:1/2">
-              <FormKit
-                id="firstName"
-                type="text"
-                name="firstName"
-                validation="required"
-                label="First Name"
-                help="Enter the contact's first name"
-              />
-            </div>
-            <div class="w-full md:1/2">
-              <FormKit
-                id="lastName"
-                type="text"
-                name="lastName"
-                validation=""
-                label="Last Name"
-                help="Enter the contact's last name"
-              />
-            </div>
-          </DaisyFlex>
-        </FormKit>
+        <ContactsForm :handle-submit="createContact" />
       </DaisyCardBody>
     </DaisyCard>
   </div>

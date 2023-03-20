@@ -16,6 +16,7 @@
     "@feathersjs/feathers": "^5.0.1",
     "@feathersjs/rest-client": "^5.0.1",
     "@feathersjs/socketio-client": "^5.0.1",
+    "@formkit/addons": "^0.16.2",
     "@formkit/i18n": "^0.16.2",
     "@formkit/icons": "^0.16.2",
     "@formkit/nuxt": "^0.16.2",

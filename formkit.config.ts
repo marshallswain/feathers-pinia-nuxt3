@@ -2,6 +2,7 @@ import { en, fr } from '@formkit/i18n'
 import type { DefaultConfigOptions } from '@formkit/vue'
 import { generateClasses } from '@formkit/themes'
 import { genesisIcons } from '@formkit/icons'
+import { createAutoAnimatePlugin } from '@formkit/addons'
 import daisy from './formkit.daisyui'
 // import genesis from '@formkit/themes/tailwindcss/genesis'
 
@@ -15,6 +16,9 @@ const config: DefaultConfigOptions = {
   config: {
     classes: generateClasses(daisy),
   },
+  plugins: [
+    createAutoAnimatePlugin(),
+  ],
 }
 
 export default config
