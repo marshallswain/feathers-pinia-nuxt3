@@ -8,12 +8,13 @@ import { OFetch } from 'feathers-pinia'
 // socket.io imports for the browser
 import socketio from '@feathersjs/socketio-client'
 import io from 'socket.io-client'
+import { createVueClient } from '~~/feathers-pinia-3/create-vue-client'
 
 /**
  * Creates a Feathers Rest client for the SSR server and a Socket.io client for the browser.
  * Also provides a cookie-storage adapter for JWT SSR using Nuxt APIs.
  */
-export default defineNuxtPlugin(async (_nuxtApp) => {
+export default defineNuxtPlugin(async (nuxt) => {
   const host = import.meta.env.VITE_MYAPP_API_URL as string || 'http://localhost:3030'
 
   // Store JWT in a cookie for SSR.
@@ -31,7 +32,23 @@ export default defineNuxtPlugin(async (_nuxtApp) => {
     : socketio(io(host, { transports: ['websocket'] }))
 
   // create the api client
-  const api = createClient(connection, { storage, storageKey })
+  const feathers = createClient(connection, { storage, storageKey })
+  const api = createVueClient(feathers, {
+    pinia: nuxt.$pinia,
+    idField: '_id',
+    ssr: !!process.server,
+    whitelist: ['$regex'],
+    paramsForServer: [],
+  })
+
+  // const user = await api.service('users').create({ email: 'test@test.com' })
+
+  // const service = api.service('users')
+  // const result = await service.find({ query: {} })
+
+  // console.log(result)
+
+  // const result = await feathersClient.service('users').find({ query: {}})
 
   return {
     provide: { api },
