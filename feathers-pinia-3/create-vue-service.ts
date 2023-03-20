@@ -119,7 +119,7 @@ export class VueService<Svc extends FeathersService> {
     return useGet(_id, _params)
   }
 
-  useGetOnce(_id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams> = {}) {
+  useGetOnce(_id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams>) {
     const _params: any = params
     Object.assign(_params.value || params, { store: this, immediate: false, onServer: true })
     const results = this.useGet(_id, _params as MaybeRef<any>)
