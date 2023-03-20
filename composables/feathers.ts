@@ -1,5 +1,4 @@
-import type { AnyData } from 'feathers-pinia'
-import { type FeathersPiniaService } from 'feathers-pinia'
+import type { AnyData, FeathersPiniaService } from 'feathers-pinia'
 
 /**
  * Provides access to Feathers Clients throughout the app
