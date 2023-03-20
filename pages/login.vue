@@ -1,63 +1,34 @@
 <script setup lang="ts">
-import { useVuelidate } from '@vuelidate/core'
-import { email, helpers, minLength, required, sameAs } from '@vuelidate/validators'
-import { _ } from '@feathersjs/commons'
-const router = useRouter()
-
 const authStore = useAuthStore()
-const User = useUserModel()
+const { api } = useFeathers()
 const inSignupMode = ref(false)
-const state = reactive({
-  email: '',
-  password: '',
-  confirmPassword: '',
-})
 
-const rules = {
-  email: { required, email },
-  password: {
-    required,
-    minLength: minLength(4),
-  },
-  confirmPassword: {
-    required,
-    minLength: minLength(4),
-    sameAsPassword: helpers.withMessage('must match password', sameAs(computed(() => state.password))),
-  },
+interface State {
+  email: string
+  password: string
+  password_confirm: string
 }
-// Validation Rules
-const conditionalRules = computed(() => {
-  return inSignupMode.value ? rules : _.omit(rules, 'confirmPassword')
-})
-const v$ = useVuelidate(conditionalRules, state)
 
-const loginAndRedirect = (data: { email: string; password: string }) => {
-  authStore
-    .authenticate({ strategy: 'local', ...state })
+async function loginAndRedirect(fields: State) {
+  return authStore
+    .authenticate({ strategy: 'local', ...fields })
     .then(() => {
       const redirectTo = authStore.loginRedirect || '/app'
       authStore.loginRedirect = null
-      router.push(redirectTo)
+      navigateTo(redirectTo)
     })
     .catch((error: any) => {
       // eslint-disable-next-line no-console
       console.log(error)
     })
 }
-const handleLogin = async () => {
-  const isValid = await v$.value.$validate()
-  if (isValid) {
-    const { email, password } = state
-    loginAndRedirect({ email, password })
-  }
+async function handleSignup(fields: State) {
+  const { email, password } = fields
+  await api.service('users').create({ email, password })
+  loginAndRedirect(fields)
 }
-const handleSignup = async () => {
-  const isValid = await v$.value.$validate()
-  if (isValid) {
-    const { email, password } = state
-    const user = await User({ email, password }).save()
-    loginAndRedirect({ email, password })
-  }
+async function handleSubmit(fields: State) {
+  return inSignupMode.value ? handleSignup(fields) : loginAndRedirect(fields)
 }
 </script>
 
@@ -65,54 +36,63 @@ const handleSignup = async () => {
   <div class="pt-16">
     <DaisyCard class="max-w-xs bg-base-200 mx-auto">
       <DaisyCardBody class="gap-4">
-        <DaisyText medium size="2xl">
-          <span v-if="inSignupMode">Signup</span>
-          <span v-else>Login</span>
+        <DaisyText medium center size="2xl">
+          {{ inSignupMode ? 'Signup' : 'Login' }}
         </DaisyText>
 
-        <form class="flex flex-col gap-4">
+        <FormKit
+          id="contact-form"
+          type="form"
+          class="flex flex-col gap-4"
+          :submit-label="inSignupMode ? 'Signup' : 'Login'"
+          :submit-attrs="{
+            inputClass: 'btn-block mt-3',
+          }"
+          @submit="handleSubmit"
+        >
           <DaisyFlex col class="gap-2">
-            <FormControlText
-              v-model="state.email" :validation-obj="v$.password" placeholder="enter email"
+            <FormKit
               type="email"
+              name="email"
+              label="Email"
+              validation="required|email"
             />
-            <FormControlText
-              v-model="state.password" :validation-obj="v$.password" placeholder="enter password"
+            <FormKit
               type="password"
+              name="password"
+              label="Password"
+              validation="required|length:4"
             />
             <div
               class="overflow-hidden transition-all duration-300"
-              :class="[inSignupMode ? 'max-h-20 mt-0' : 'max-h-0 -mt-4']"
+              :class="[inSignupMode ? 'max-h-32 mt-0' : 'max-h-0 -mt-4']"
             >
-              <FormControlText
-                v-model="state.confirmPassword" :validation-obj="v$.confirmPassword"
-                placeholder="confirm password" type="password"
+              <FormKit
+                v-if="inSignupMode"
+                type="password"
+                name="password_confirm"
+                label="Confirm Password"
+                validation="required|confirm|length:4"
               />
             </div>
           </DaisyFlex>
+        </FormKit>
 
-          <DaisyButton v-if="inSignupMode" primary @click.prevent="handleSignup">
-            Signup
-          </DaisyButton>
-          <DaisyButton v-else primary @click.prevent="handleLogin">
-            Login
-          </DaisyButton>
+        <div class="text-center">
+          <DaisyFlex v-if="inSignupMode" col>
+            <span>Already signed up?</span>
+            <DaisyLink @click="inSignupMode = !inSignupMode">
+              <span>Login</span>
+            </DaisyLink>
+          </DaisyFlex>
 
-          <div class="text-center">
-            <DaisyFlex v-if="inSignupMode" col>
-              <span>Already signed up?</span>
-              <DaisyLink @click="inSignupMode = !inSignupMode">
-                <span>Login</span>
-              </DaisyLink>
-            </DaisyFlex>
-            <DaisyFlex v-else col>
-              <span>Need an account?</span>
-              <DaisyLink @click="inSignupMode = !inSignupMode">
-                <span>Signup</span>
-              </DaisyLink>
-            </DaisyFlex>
-          </div>
-        </form>
+          <DaisyFlex v-else col>
+            <span>Need an account?</span>
+            <DaisyLink @click="inSignupMode = !inSignupMode">
+              <span>Signup</span>
+            </DaisyLink>
+          </DaisyFlex>
+        </div>
       </DaisyCardBody>
     </DaisyCard>
   </div>
