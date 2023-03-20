@@ -14,8 +14,7 @@ export class VueService<Svc extends FeathersService> {
   store
 
   constructor(public service: Svc, public options: VueServiceOptions) {
-    if (options.store)
-      this.store = options.store
+    this.store = options.store
   }
 
   /* service methods clone params */
@@ -65,12 +64,12 @@ export class VueService<Svc extends FeathersService> {
   /* store methods accept refs and don't copy params */
 
   findInStore(params?: MaybeRef<Params<Query>>) {
-    const result = this.store.find(params)
+    const result = this.store.findInStore(params)
     return result
   }
 
   findOneInStore(params?: MaybeRef<Params<Query>>) {
-    const result = this.store.find(params)
+    const result = this.store.findInStore(params)
     const item = result.data[0] || null
     return item
   }
@@ -113,9 +112,19 @@ export class VueService<Svc extends FeathersService> {
     return useFind(_params)
   }
 
-  useGet(id: Ref<Id>, params: MaybeRef<UseGetParams>) {
+  useGet(id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams>) {
+    const _id = ref(id)
     const _params = ref(params)
     Object.assign(_params.value, { store: this.store, service: this })
-    return useGet(id, _params)
+    return useGet(_id, _params)
+  }
+
+  useGetOnce(_id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams> = {}) {
+    const _params: any = params
+    Object.assign(_params.value || params, { store: this, immediate: false, onServer: true })
+    const results = this.useGet(_id, _params as MaybeRef<any>)
+    results.queryWhen(() => !results.data.value)
+    results.get()
+    return results
   }
 }

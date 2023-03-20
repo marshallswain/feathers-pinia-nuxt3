@@ -1,11 +1,15 @@
 <script setup lang="ts">
-const Task = useTaskModel()
+const { api } = useFeathers()
 
-const tasks = [1, 2, 3, 4, 5].map((val: string) => Task({ description: val.toString() }).addToStore())
+const fixtures = [1, 2, 3, 4, 5].map((val: number) => ({ _id: val.toString(), description: val.toString() }))
+fixtures.forEach((task: any) => api.service('tasks').createInStore(task))
+
+const tasks = api.service('tasks').findInStore({ query: {} })
 
 // Is focus inside the task list
 const listEl = ref()
-const { focused } = useFocusWithin(listEl)
+// const { focused } = useFocusWithin(listEl)
+useFocusWithin(listEl)
 
 function handlePrev(e: KeyboardEvent) {
   const previousEl = (e.target as any).previousElementSibling as HTMLDivElement
@@ -48,7 +52,13 @@ function handleNext(e: KeyboardEvent) {
       <hr class="border-t border-base-content/20">
 
       <DaisyFlex ref="listEl" col class="gap-1 py-1">
-        <TaskListItem v-for="task in tasks" :task="task" @prev="handlePrev" @next="handleNext" />
+        <TaskListItem
+          v-for="task in tasks"
+          :key="task.description"
+          :task="task"
+          @prev="handlePrev"
+          @next="handleNext"
+        />
       </DaisyFlex>
     </DaisyCardBody>
   </DaisyCard>

@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import type { ModelInstance } from 'feathers-pinia'
+// import type { ModelInstance } from 'feathers-pinia'
 import type { Tasks } from 'feathers-pinia-api'
-import { useClone } from 'feathers-pinia'
+// import { useClone } from 'feathers-pinia'
 // import InfoIcon from '~icons/feather/info'
 
 interface Props {
-  task: ModelInstance<Tasks>
+  task: Tasks
 }
 const props = defineProps<Props>()
 const emit = defineEmits(['next', 'prev'])
 
-const _task = useClone(props, 'task')
+const _task = props.task
 
 // Is the task wrapper focused?
 const taskWrapper = ref()
