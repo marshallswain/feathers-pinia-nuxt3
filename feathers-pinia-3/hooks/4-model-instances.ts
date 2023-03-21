@@ -1,27 +1,22 @@
-/* eslint-disable no-console */
 import type { HookContext, NextFunction } from '@feathersjs/feathers'
 import type { AnyData } from '../types'
 
 export const makeModelInstances = () => {
   return async (context: HookContext, next: NextFunction) => {
-    const ModelFn = context.service.ModelFn
+    const modelFn = context.service.new
 
     if (next)
       await next()
 
-    if (ModelFn) {
-      console.log('found model', context.path, context.method)
+    if (modelFn) {
       if (Array.isArray(context.result?.data))
-        context.result.data = context.result.data.map((i: AnyData) => ModelFn(i))
+        context.result.data = context.result.data.map((i: AnyData) => modelFn(i))
 
       else if (Array.isArray(context.result))
-        context.result = context.result.map((i: AnyData) => ModelFn(i))
+        context.result = context.result.map((i: AnyData) => modelFn(i))
 
       else
-        context.result = ModelFn(context.result)
-    }
-    else {
-      console.log('no model', context.path, context.method)
+        context.result = modelFn(context.result)
     }
   }
 }

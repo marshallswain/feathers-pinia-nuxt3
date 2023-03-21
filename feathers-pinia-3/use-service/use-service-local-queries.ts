@@ -46,6 +46,12 @@ export const useServiceLocal = <M extends AnyData, Q extends AnyData>(options: U
     if (tempStorage && params.temps)
       values.push(...tempStorage.list.value)
 
+    if (filters.$or)
+      query.$or = filters.$or
+
+    if (filters.$and)
+      query.$and = filters.$and
+
     values = values.filter(sift(query, { operations }))
     return { values, filters }
   }

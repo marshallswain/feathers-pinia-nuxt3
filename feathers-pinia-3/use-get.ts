@@ -1,38 +1,26 @@
 import type { Id, Query } from '@feathersjs/feathers'
-import { computed, isReadonly, isRef, ref, unref, watch } from 'vue-demi'
+import { computed, ref, unref, watch } from 'vue-demi'
 import type { Ref } from 'vue-demi'
-import type { MaybeRef, Params } from './types'
+import type { MaybeRef, Params, UseFindGetDeps, UseGetParams } from './types'
+import { convertData } from './utils/convert-data'
 
-export interface UseGetParams extends Params<Query> {
-  query?: Query
-  onServer?: boolean
-  immediate?: boolean
-  watch?: boolean
-  store: any
-}
+export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>, deps: UseFindGetDeps) => {
+  const { store, service } = deps
 
-export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>) => {
-  const store = unref(_params).store
-  const id = (isRef(_id) ? (isReadonly(_id) ? ref(_id.value) : _id) : ref(_id)) as Ref<Id>
-  const params = isRef(_params) ? (isReadonly(_params) ? ref(_params.value) : _params) : ref(_params)
-
-  // Remove the store from the provided params
-  delete (params.value as any).store
+  // normalize args into refs
+  const id = isRef(_id) ? _id : ref(_id)
+  const params = isRef(_params) ? _params : ref(_params)
 
   /** ID & PARAMS **/
-  const { immediate = true, watch: _watch = true, onServer = false } = params.value as any
+  const { immediate = true, watch: _watch = true, onServer = false } = params.value
   const isSsr = computed(() => store.isSsr)
 
   /** REQUEST STATE **/
-  const _isPending = ref(false)
-  const _hasBeenRequested = ref(false)
-  const _hasLoaded = ref(false)
-  const _error = ref<any>(null)
-  const isPending = computed(() => _isPending.value)
-  const hasBeenRequested = computed(() => _hasBeenRequested.value)
-  const hasLoaded = computed(() => _hasLoaded.value)
-  const error = computed(() => _error.value)
-  const clearError = () => (_error.value = null)
+  const isPending = ref(false)
+  const hasBeenRequested = ref(false)
+  const hasLoaded = ref(false)
+  const error = ref<any>(null)
+  const clearError = () => (error.value = null)
 
   /** STORE ITEMS **/
   const ids = ref<Id[]>([])
@@ -40,10 +28,14 @@ export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>) => {
     return ids.value.length && ids.value[ids.value.length - 1]
   })
   const data = computed(() => {
-    if (isPending.value && mostRecentId.value != null)
-      return store.getFromStore(mostRecentId.value, params as any) || null
-
-    return store.getFromStore(id.value, params as any) || null
+    if (isPending.value && mostRecentId.value != null) {
+      const result = store.getFromStore(mostRecentId.value, params as any) || null
+      const converted = convertData(service, result)
+      return converted
+    }
+    const result = store.getFromStore(id.value, params as any) || null
+    const converted = convertData(service, result)
+    return converted
   })
   const getFromStore = store.getFromStore
 
@@ -67,28 +59,28 @@ export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>) => {
       throw new Error('id is required for feathers-pinia get requests')
 
     requestCount.value++
-    _hasBeenRequested.value = true // never resets
-    _isPending.value = true
-    _hasLoaded.value = false
-    _error.value = null
+    hasBeenRequested.value = true // never resets
+    isPending.value = true
+    hasLoaded.value = false
+    error.value = null
 
     try {
-      const response = await store.get(_id as Id, _params as any)
+      const response = await service.get(_id as Id, _params as any)
 
       // Keep a list of retrieved ids
       if (response && _id)
         ids.value.push(_id)
 
-      _hasLoaded.value = true
+      hasLoaded.value = true
 
       return response
     }
     catch (err: any) {
-      _error.value = err
+      error.value = err
       throw err
     }
     finally {
-      _isPending.value = false
+      isPending.value = false
     }
   }
 
@@ -127,10 +119,10 @@ export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>) => {
     queryWhen, // (queryWhenFn: () => boolean) => void
 
     // Request State
-    isPending, // Ref<boolean>
-    hasBeenRequested, // Ref<boolean>
-    hasLoaded, // Ref<boolean>
-    error, // ComputedRef<any>
+    isPending: computed(() => isPending.value), // ComputedRef<boolean>
+    hasBeenRequested: computed(() => hasBeenRequested.value), // ComputedRef<boolean>
+    hasLoaded: computed(() => hasLoaded.value), // ComputedRef<boolean>
+    error: computed(() => error.value), // ComputedRef<any>
     clearError, // () => void
   }
 }

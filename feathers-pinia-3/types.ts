@@ -1,5 +1,6 @@
 import type { Ref } from 'vue-demi'
 import type { Params as FeathersParams } from '@feathersjs/feathers'
+import type { PaginationStateQuery } from './use-service'
 
 export type MaybeRef<T> = T | Ref<T>
 export type MaybeArray<T> = T | T[]
@@ -91,3 +92,49 @@ export interface MakeCopyOptions {
 }
 
 export type ById<M> = Record<string | number | symbol, M>
+
+/* useFind & useGet */
+
+export interface UseFindGetDeps {
+  store: any
+  service: any
+}
+
+export interface UseFindParams extends Params<Query> {
+  query: Query
+  onServer?: boolean
+  qid?: string
+  immediate?: boolean
+  watch?: boolean
+}
+
+export interface UseGetParams extends Params<Query> {
+  query?: Query
+  onServer?: boolean
+  immediate?: boolean
+  watch?: boolean
+}
+
+interface QueryPagination {
+  $limit: number
+  $skip: number
+}
+
+export interface MostRecentQuery {
+  pageId: string
+  pageParams: QueryPagination
+  queriedAt: number
+  query: Query
+  queryId: string
+  queryParams: Query
+  total: number
+}
+
+export interface CurrentQuery<M extends AnyData> extends MostRecentQuery {
+  qid: string
+  ids: number[]
+  items: M[]
+  total: number
+  queriedAt: number
+  queryState: PaginationStateQuery
+}

@@ -3,67 +3,23 @@ import { computed, isReadonly, ref, unref, watch } from 'vue-demi'
 import type { Ref } from 'vue-demi'
 import { _ } from '@feathersjs/commons'
 import isEqual from 'fast-deep-equal'
-// import type { ModelInstance, UseServiceStore } from './use-base-model'
-import type { Paginated, Params, Query, QueryInfo } from './types'
-import type { AnyData, PaginationStateQuery } from './use-service'
+import type { MaybeRef, Paginated, Params, Query, QueryInfo, UseFindGetDeps, UseFindParams } from './types'
+import type { AnyData } from './use-service'
 import { usePageData } from './utils-pagination'
-import {
-  computedAttr,
-  getQueryInfo,
-  hasOwn,
-  makeParamsWithoutPage,
-  makeUseFindItems,
-  updateParamsExcludePage,
-} from './utils'
+import { getQueryInfo, hasOwn } from './utils'
+import { computedAttr, makeParamsWithoutPage, makeUseFindItems, updateParamsExcludePage } from './utils/use-find-get'
+import { convertData } from './utils/convert-data'
 
-interface QueryPagination {
-  $limit: number
-  $skip: number
-}
+export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
+  const { store, service } = deps
 
-export interface UseFindParams extends Params<Query> {
-  query: Query
-  onServer?: boolean
-  qid?: string
-  immediate?: boolean
-  watch?: boolean
-  store?: any
-  service?: any
-}
-
-interface MostRecentQuery {
-  pageId: string
-  pageParams: QueryPagination
-  queriedAt: number
-  query: Query
-  queryId: string
-  queryParams: Query
-  total: number
-}
-
-export interface CurrentQuery<M extends AnyData> extends MostRecentQuery {
-  qid: string
-  ids: number[]
-  items: M[]
-  total: number
-  queriedAt: number
-  queryState: PaginationStateQuery
-}
-
-export const useFind = (_params: Ref<UseFindParams>) => {
   // If the _params are a computed, store them so we can watch them later.
   let _computedParams: any
   if (isReadonly(_params))
     _computedParams = _params
 
-  // extract the store and service
-  const store = unref(_params).store
-  const service = unref(_params).service
-  delete _params.value.store
-  delete _params.value.service
-
   // turn computed params into writable ref
-  const params = ref(_params)
+  const params = isRef(_params) ? _params : ref(_params)
 
   /** PARAMS **/
   const qid = computedAttr(params.value, 'qid')
@@ -86,7 +42,6 @@ export const useFind = (_params: Ref<UseFindParams>) => {
     return { ...params.value, query }
   })
   const onServer = !!params.value.onServer
-  const isSsr = computed(() => store.isSsr)
 
   /** REQUEST STATE **/
   const isPending = ref(false)
@@ -120,7 +75,9 @@ export const useFind = (_params: Ref<UseFindParams>) => {
       return allIds
     }, [])
     const matchingItemsById = _.pick(store.itemsById, ...ids)
-    return Object.values(matchingItemsById)
+    const result = Object.values(matchingItemsById)
+    const converted = convertData(service, result)
+    return converted
   })
 
   /** QUERY WHEN **/
@@ -147,7 +104,8 @@ export const useFind = (_params: Ref<UseFindParams>) => {
       return null
 
     const { ids, queriedAt } = pageState
-    const items = Object.values(_.pick(store.itemsById, ...ids))
+    const result = Object.values(_.pick(store.itemsById, ...ids))
+    const items = convertData(service, result)
     const info = { ...queryInfo, ids, items, total, queriedAt, queryState }
     return info || null
   })
@@ -195,7 +153,7 @@ export const useFind = (_params: Ref<UseFindParams>) => {
   /** SERVER FETCHING **/
   const requestCount = ref(0)
   const request = ref<Promise<Paginated<AnyData>> | null>(null)
-  const find = async (params = paramsWithPagination.value) => {
+  const find = async (params: MaybeRef<Params<Query>> = paramsWithPagination.value) => {
     const _params = unref(params)
     // if queryWhen is falsey, return early with dummy data
     if (!queryWhenFn())
@@ -292,7 +250,9 @@ export const useFind = (_params: Ref<UseFindParams>) => {
   return {
     params, // Ref<FindClassParams>
     onServer, // boolean
-    isSsr, // ComputedRef<boolean>
+    isSsr: computed(() => {
+      return store.isSsr
+    }), // ComputedRef<boolean>
     qid, // WritableComputedRef<string>
 
     // Data
