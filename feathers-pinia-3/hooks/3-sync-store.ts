@@ -12,7 +12,7 @@ export const syncStore = () => async (context: HookContext, next: NextFunction) 
     await next()
 
   if (!context.params.skipStore) {
-    if (method === 'removed') {
+    if (method === 'remove') {
       store.removeFromStore(context.result)
     }
     else if (method === 'create') {

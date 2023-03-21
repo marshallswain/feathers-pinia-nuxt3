@@ -1,11 +1,30 @@
 <script setup lang="ts">
+import type { Contacts } from 'feathers-pinia-api'
+
 definePageMeta({
   layout: 'app',
   keepalive: true,
 })
 
 const { api } = useFeathers()
-const list = ref([1])
+
+/* delete contact modal */
+const modal = reactive({
+  isOpen: false,
+  title: '',
+  message: '',
+  item: null as any,
+})
+function openDeleteDialog(contact: Contacts) {
+  modal.title = `Delete ${contact.firstName} ${contact.lastName}?`
+  modal.message = 'This cannot be undone.'
+  modal.item = contact
+  modal.isOpen = true
+}
+function handleDelete() {
+  navigateTo('./')
+  modal.item.remove()
+}
 
 /* All Contacts */
 const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
@@ -34,9 +53,17 @@ if (isSsr.value)
 
 <template>
   <DaisyFlex col items-center class="h-full gap-2 mx-auto lg:container transition-all duration-300 px-1 sm:px-2 md:px-4 lg:px-0">
+    <DeleteDialog
+      v-model:is-open="modal.isOpen"
+      :title="modal.title"
+      :message="modal.message"
+      :item="modal.item"
+      @delete="handleDelete"
+    />
+
     <DaisyDrawerLayout mobile class="w-full h-full m-6 gap-3 border-none!">
       <DaisyDrawerLayoutContent v-slot="{ openDrawer }">
-        <DaisyButtonGroup v-if="list.length" class="lg:hidden">
+        <DaisyButtonGroup class="lg:hidden">
           <DaisyButton ghost class="gap-2" @click="openDrawer()">
             <i class="icon-[feather--menu] text-xl" />
             Open List
@@ -69,7 +96,23 @@ if (isSsr.value)
               <template v-for="contact in sidebarContacts" :key="contact._id">
                 <NuxtLink v-slot="{ navigate, isActive }" :to="`/app/contacts/${contact._id}`" custom>
                   <DaisyMenuItem @click="closeDrawer(); navigate();">
-                    <a :class="{ active: isActive }">{{ contact.firstName }} {{ contact.lastName }}</a>
+                    <DaisyFlex :class="{ active: isActive }">
+                      <span class="flex-grow">{{ contact.firstName }} {{ contact.lastName }}</span>
+                      <!-- Context menu for active contact -->
+                      <DaisyDropdown end>
+                        <DaisyButton is="label" v-if="isActive" ghost sm circle class="-m-2" tabindex="0">
+                          <i class="icon-[feather--menu]" />
+                        </DaisyButton>
+                        <DaisyMenu tabindex="0" class="shadow dropdown-content bg-base-200 rounded-box">
+                          <DaisyMenuItem>
+                            <DaisyButton error class="w-32" @click="openDeleteDialog(contact)">
+                              <span>Delete</span>
+                              <i class="icon-[feather--trash-2]" />
+                            </DaisyButton>
+                          </DaisyMenuItem>
+                        </DaisyMenu>
+                      </DaisyDropdown>
+                    </DaisyFlex>
                   </DaisyMenuItem>
                 </NuxtLink>
               </template>
