@@ -16,7 +16,7 @@ definePageMeta({
     <DaisyFlex col class="w-full rounded-box bg-base-200 sm:flex-row">
       <div
         class="h-80 w-full flex-grow md:w-96 bg-cover bg-center rounded-t-box sm:rounded-tr-none sm:rounded-l-box"
-        style="background-image: url('https://source.unsplash.com/random/600×600/?cats')"
+        :style="{ backgroundImage: `url('https://source.unsplash.com/random/600×600/?cats')` }"
       />
       <DaisyFlex col items-center justify-center grow class="gap-1 pt-6 pb-8 px-4 mx-auto text-center sm:text-left">
         <DaisyText bold xl>
