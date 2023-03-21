@@ -3,13 +3,27 @@ defineEmits(['openDrawer'])
 definePageMeta({
   layout: 'app',
 })
+
+const $route = useRoute()
+const { api } = useFeathers()
+
+const { data: contact } = api.service('contacts').useGetOnce($route.params.id as string)
+
+async function createContact(fields: any) {
+  await api.service('contacts').patch($route.params.id as string, fields)
+}
 </script>
 
 <template>
-  <div class="flex flex-col">
-    Contact Detail view
-    <DaisyButton primary class="lg:hidden" @click="$emit('openDrawer')">
-      Open Contact List
-    </DaisyButton>
+  <div>
+    <DaisyCard bordered>
+      <DaisyCardBody class="gap-4">
+        <DaisyCardTitle class="font-bold">
+          Add Contact
+        </DaisyCardTitle>
+
+        <ContactsForm :contact="contact" :handle-submit="createContact" />
+      </DaisyCardBody>
+    </DaisyCard>
   </div>
 </template>

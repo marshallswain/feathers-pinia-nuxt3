@@ -40,6 +40,7 @@
     "fast-copy": "^3.0.1",
     "feathers-pinia": "^2.0.0-pre.13",
     "feathers-pinia-api": "http://localhost:3030/feathers-pinia-api-0.0.3.tgz",
+    "isomorphic-mongo-objectid": "^1.0.9",
     "jwt-decode": "^3.1.2",
     "nuxt": "^3.3.1",
     "pinia": "^2.0.33",

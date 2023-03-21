@@ -4,7 +4,7 @@ const { api } = useFeathers()
 const fixtures = [1, 2, 3, 4, 5].map((val: number) => ({ _id: val.toString(), description: val.toString() }))
 fixtures.forEach((task: any) => api.service('tasks').createInStore(task))
 
-const tasks = api.service('tasks').findInStore({ query: {} })
+const { data: tasks } = api.service('tasks').findInStore({ query: {} })
 
 // Is focus inside the task list
 const listEl = ref()

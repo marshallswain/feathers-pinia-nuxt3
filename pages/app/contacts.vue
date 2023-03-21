@@ -7,7 +7,29 @@ definePageMeta({
 const { api } = useFeathers()
 const list = ref([1])
 
-const { data } = await api.service('contacts').find({ query: { $skip: 0, $limit: 10 } })
+/* All Contacts */
+const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
+
+/* Sidebar Contacts */
+const search = ref('')
+const resultsPerPage = ref(10)
+const sidebarParams = computed(() => {
+  const query = { $limit: resultsPerPage.value }
+  // add these params when search is entered
+  if (search.value) {
+    const regexSearch = { $regex: search.value, $options: 'igm' }
+    Object.assign(query, {
+      $or: [
+        { firstName: regexSearch }, { lastName: regexSearch }],
+    })
+  }
+  return { query, immediate: false }
+})
+const info = api.service('contacts').useFind(sidebarParams)
+const { data: sidebarContacts, isPending, haveLoaded, next, prev, canNext, canPrev, find, isSsr, toStart } = info
+
+if (isSsr.value)
+  await find({ query: { $limit: 300 } })
 </script>
 
 <template>
@@ -21,7 +43,7 @@ const { data } = await api.service('contacts').find({ query: { $skip: 0, $limit:
           </DaisyButton>
         </DaisyButtonGroup>
 
-        <NuxtPage :list="list" @open-drawer="openDrawer()" />
+        <NuxtPage :contacts="allContacts" @open-drawer="openDrawer()" />
       </DaisyDrawerLayoutContent>
 
       <DaisyDrawer v-slot="{ closeDrawer }" class="rounded-box ">
@@ -41,15 +63,17 @@ const { data } = await api.service('contacts').find({ query: { $skip: 0, $limit:
               </DaisyButton>
             </RouterLink>
 
-            <DaisyMenuTitle class="mt-4 !text-base">
-              Select a Contact
-            </DaisyMenuTitle>
-            <DaisyMenuItem @click="() => closeDrawer()">
-              <a>Menu Item</a>
-            </DaisyMenuItem>
-            <DaisyMenuItem @click="() => closeDrawer()">
-              <a>Menu Item</a>
-            </DaisyMenuItem>
+            <div>
+              <DaisyTextInput v-model="search" type="search" placeholder="search contacts" bordered class="my-3 w-full" />
+
+              <template v-for="contact in sidebarContacts" :key="contact._id">
+                <NuxtLink v-slot="{ navigate, isActive }" :to="`/app/contacts/${contact._id}`" custom>
+                  <DaisyMenuItem @click="closeDrawer(); navigate();">
+                    <a :class="{ active: isActive }">{{ contact.firstName }} {{ contact.lastName }}</a>
+                  </DaisyMenuItem>
+                </NuxtLink>
+              </template>
+            </div>
           </DaisyMenu>
         </DaisyFlex>
       </DaisyDrawer>

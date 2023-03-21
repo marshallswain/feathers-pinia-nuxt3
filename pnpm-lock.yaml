@@ -32,6 +32,7 @@ specifiers:
   fast-copy: ^3.0.1
   feathers-pinia: ^2.0.0-pre.13
   feathers-pinia-api: http://localhost:3030/feathers-pinia-api-0.0.3.tgz
+  isomorphic-mongo-objectid: ^1.0.9
   jwt-decode: ^3.1.2
   nuxt: ^3.3.1
   nuxt-feathers-pinia: ^0.0.1
@@ -79,6 +80,7 @@ devDependencies:
   fast-copy: 3.0.1
   feathers-pinia: 2.0.0-pre.14_pinia@2.0.33+vue@3.2.47
   feathers-pinia-api: '@localhost+3030/feathers-pinia-api-0.0.3.tgz'
+  isomorphic-mongo-objectid: 1.0.9
   jwt-decode: 3.1.2
   nuxt: 3.3.1_j4766f7ecgqbon3u7zlxn5zszu
   pinia: 2.0.33_p4srtwdgezcoeovfcc2yxzvaue

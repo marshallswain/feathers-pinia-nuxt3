@@ -4,10 +4,11 @@ definePageMeta({
   layout: 'app',
 })
 
+const { api } = useFeathers()
+
 async function createContact(fields: any) {
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  // eslint-disable-next-line no-console
-  console.log(fields)
+  const result = await api.service('contacts').create(fields)
+  await navigateTo(`${result._id}`)
 }
 </script>
 

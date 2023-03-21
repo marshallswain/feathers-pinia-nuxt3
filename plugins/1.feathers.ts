@@ -39,16 +39,13 @@ export default defineNuxtPlugin(async (nuxt) => {
     ssr: !!process.server,
     whitelist: ['$regex'],
     paramsForServer: [],
+    services: {
+      users: {},
+      tasks: {
+        skipRequestIfExists: true,
+      },
+    },
   })
-
-  // const user = await api.service('users').create({ email: 'test@test.com' })
-
-  // const service = api.service('users')
-  // const result = await service.find({ query: {} })
-
-  // console.log(result)
-
-  // const result = await feathersClient.service('users').find({ query: {}})
 
   return {
     provide: { api },

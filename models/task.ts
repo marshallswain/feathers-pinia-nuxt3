@@ -1,7 +1,7 @@
 import { type ModelInstance } from 'feathers-pinia'
 import type { Tasks } from 'feathers-pinia-api'
 
-export const makeTask = (data: ModelInstance<Tasks>) => {
+export const setupTask = (data: ModelInstance<Tasks>) => {
   const defaults = {
     description: '',
     isComplete: false,
