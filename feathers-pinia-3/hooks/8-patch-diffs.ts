@@ -8,7 +8,7 @@ export const patchDiffing = () => async (context: HookContext, next: NextFunctio
 
   let rollbackData: any
   let clone: any
-  const shouldRun = method === 'patch' && data.__isClone && params.diff !== false && !params.data
+  const shouldRun = method === 'patch' && !params.data && (data.__isClone || params.diff !== false)
 
   if (shouldRun) {
     clone = data

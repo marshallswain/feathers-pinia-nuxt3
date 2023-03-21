@@ -10,7 +10,7 @@ const { api } = useFeathers()
 const { data: contact } = api.service('contacts').useGetOnce($route.params.id as string)
 
 async function patchContact(fields: any) {
-  await api.service('contacts').patch($route.params.id as string, fields)
+  await contact.value.save({ diff: fields })
 }
 </script>
 

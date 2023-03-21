@@ -1,6 +1,6 @@
 import fastCopy from 'fast-copy'
 import type { MakeCopyOptions } from '../types'
-import { getArray } from '../utils'
+import { defineProperties, getArray } from '../utils'
 import type { AnyData } from './types'
 import { useServiceTemps } from './use-service-temps'
 import { useServiceClones } from './use-service-clones'
@@ -29,13 +29,21 @@ export const useAllStorageTypes = <M extends AnyData>(options: UseAllStorageOpti
    * Private
    */
   const makeCopy = (item: M, data: AnyData = {}, { isClone }: MakeCopyOptions) => {
-    const copied = item.__Model({
-      ...fastCopy(item),
-      ...data,
+    const copied = fastCopy(item)
+    Object.assign(copied, data)
+    // instance.__isTemp
+    Object.defineProperty(copied, '__isTemp', {
+      configurable: true,
+      enumerable: false,
+      get() {
+        return this[this.__idField] == null
+      },
+    })
+    const withExtras = defineProperties(copied, {
       __isClone: isClone,
       __tempId: item.__tempId,
     })
-    return copied
+    return withExtras
   }
 
   // item storage
