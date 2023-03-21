@@ -102,7 +102,7 @@ export interface UseFindGetDeps {
 
 export interface UseFindParams extends Params<Query> {
   query: Query
-  onServer?: boolean
+  paginateOnServer?: boolean
   qid?: string
   immediate?: boolean
   watch?: boolean
@@ -110,7 +110,6 @@ export interface UseFindParams extends Params<Query> {
 
 export interface UseGetParams extends Params<Query> {
   query?: Query
-  onServer?: boolean
   immediate?: boolean
   watch?: boolean
 }

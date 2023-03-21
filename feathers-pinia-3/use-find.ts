@@ -30,10 +30,14 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   const limit = computedAttr(query, '$limit')
   const skip = computedAttr(query, '$skip')
   const paramsWithPagination = computed(() => {
+    const query = params.value.query || {}
     return {
       ...params.value,
-      $limit: limit.value,
-      $skip: skip.value,
+      query: {
+        ...query,
+        $limit: limit.value,
+        $skip: skip.value,
+      },
     }
   })
   const paramsWithoutPagination = computed(() => {
@@ -41,7 +45,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
     const query = _.omit(queryShallowCopy, '$limit', '$skip')
     return { ...params.value, query }
   })
-  const onServer = !!params.value.onServer
+  const paginateOnServer = !!params.value.paginateOnServer
 
   /** REQUEST STATE **/
   const isPending = ref(false)
@@ -52,9 +56,9 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
 
   /** STORE ITEMS **/
   const data = computed(() => {
-    if (isPending.value && latestQuery.value && onServer) {
+    if (isPending.value && latestQuery.value && paginateOnServer) {
       const { pageParams, queryParams } = latestQuery.value as any
-      const params = { query: { ...pageParams, ...queryParams }, onServer: true }
+      const params = { query: { ...pageParams, ...queryParams }, paginateOnServer: true }
       return makeUseFindItems(store, service, params).value
     }
     return makeUseFindItems(store, service, paramsWithPagination).value
@@ -122,7 +126,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   /** PAGINATION DATA **/
   const storeCount = computed(() => service.countInStore(paramsWithoutPagination.value as any))
   const total = computed(() => {
-    if (onServer)
+    if (paginateOnServer)
       return (latestQuery.value as any)?.response.total
     else return storeCount.value
   })
@@ -153,8 +157,8 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   /** SERVER FETCHING **/
   const requestCount = ref(0)
   const request = ref<Promise<Paginated<AnyData>> | null>(null)
-  const find = async (params: MaybeRef<Params<Query>> = paramsWithPagination.value) => {
-    const _params = unref(params)
+  const find = async (__params?: MaybeRef<Params<Query>>) => {
+    const ___params = unref(paginateOnServer ? params : __params)
     // if queryWhen is falsey, return early with dummy data
     if (!queryWhenFn())
       return Promise.resolve({ data: [] as AnyData[] } as Paginated<AnyData>)
@@ -166,7 +170,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
     error.value = null
 
     try {
-      const response = await service.find(_params as any)
+      const response = await service.find(___params as any)
 
       // Set limit and skip if missing
       if ((hasOwn(response, 'limit') && limit.value == null) || skip.value == null) {
@@ -205,7 +209,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
     initWithLimitOrSkip = true
 
   const makeRequest = async (_params?: Params<Query>) => {
-    if (!onServer)
+    if (!paginateOnServer)
       return
 
     // Don't make a second request if no limit or skip were provided
@@ -217,7 +221,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
     await request.value
   }
 
-  if (onServer) {
+  if (paginateOnServer) {
     // When a read-only computed was provided, watch the params
     if (_computedParams) {
       let _cachedWatchedParams: UseFindParams
@@ -249,7 +253,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
 
   return {
     params, // Ref<FindClassParams>
-    onServer, // boolean
+    paginateOnServer, // boolean
     isSsr: computed(() => {
       return store.isSsr
     }), // ComputedRef<boolean>

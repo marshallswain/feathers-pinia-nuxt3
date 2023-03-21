@@ -39,7 +39,7 @@ const sidebarParams = computed(() => {
         { firstName: regexSearch }, { lastName: regexSearch }],
     })
   }
-  return { query, immediate: false }
+  return { query, immediate: false, paginateOnServer: true }
 })
 const info = api.service('contacts').useFind(sidebarParams)
 const { data: sidebarContacts, isPending, haveLoaded, next, prev, canNext, canPrev, find, isSsr, toStart } = info
