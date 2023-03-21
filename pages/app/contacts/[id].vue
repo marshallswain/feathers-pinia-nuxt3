@@ -9,7 +9,7 @@ const { api } = useFeathers()
 
 const { data: contact } = api.service('contacts').useGetOnce($route.params.id as string)
 
-async function createContact(fields: any) {
+async function patchContact(fields: any) {
   await api.service('contacts').patch($route.params.id as string, fields)
 }
 </script>
@@ -22,7 +22,7 @@ async function createContact(fields: any) {
           Add Contact
         </DaisyCardTitle>
 
-        <ContactsForm :contact="contact" :handle-submit="createContact" />
+        <ContactsForm :contact="contact" :handle-submit="patchContact" />
       </DaisyCardBody>
     </DaisyCard>
   </div>
