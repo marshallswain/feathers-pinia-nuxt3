@@ -84,6 +84,9 @@ export const useAuth = <d extends AuthenticateData = AuthenticateData>(options: 
         error.value = err
         return onError(err)
       })
+      .finally(() => {
+        authCounter.sub()
+      })
     return promise.value
   }
 
@@ -100,10 +103,6 @@ export const useAuth = <d extends AuthenticateData = AuthenticateData>(options: 
 
   // reauthentication at app start
   const isInitDone = ref(false)
-  const done = () => {
-    authCounter.sub()
-    isInitDone.value = true
-  }
   const reAuthenticate = async () => {
     authCounter.add()
     promise.value = api.authentication
@@ -121,7 +120,10 @@ export const useAuth = <d extends AuthenticateData = AuthenticateData>(options: 
         return _result || result
       })
       .catch(onInitError)
-      .finally(() => done())
+      .finally(() => {
+        authCounter.sub()
+        isInitDone.value = true
+      })
     return promise.value
   }
 
