@@ -119,7 +119,10 @@ export const useAuth = <d extends AuthenticateData = AuthenticateData>(options: 
         const _result = await onInitSuccess(result)
         return _result || result
       })
-      .catch(onInitError)
+      .catch((error: any) => {
+        error.value = error
+        return onInitError(error)
+      })
       .finally(() => {
         authCounter.sub()
         isInitDone.value = true
