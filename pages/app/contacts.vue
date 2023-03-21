@@ -26,9 +26,6 @@ function handleDelete() {
   modal.item.remove()
 }
 
-/* All Contacts */
-const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
-
 /* Sidebar Contacts */
 const search = ref('')
 const resultsPerPage = ref(10)
@@ -49,6 +46,9 @@ const { data: sidebarContacts, isPending, haveLoaded, next, prev, canNext, canPr
 
 if (isSsr.value)
   await find({ query: { $limit: 300 } })
+
+/* All Contacts */
+const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
 </script>
 
 <template>
