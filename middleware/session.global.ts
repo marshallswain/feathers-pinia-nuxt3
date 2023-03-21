@@ -5,9 +5,7 @@ export default defineNuxtRouteMiddleware(async (to, _from) => {
   await auth.getPromise()
 
   // Allow 404 page to show
-  const router = useRouter()
-  const allRoutes = router.getRoutes()
-  if (!allRoutes.map(r => r.path).includes(to.path))
+  if (!to.matched.length)
     return
 
   // if user is not logged in, redirect to '/' when not navigating to a public page.
