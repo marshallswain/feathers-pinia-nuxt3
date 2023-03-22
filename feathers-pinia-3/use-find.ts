@@ -56,13 +56,12 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
 
   /** STORE ITEMS **/
   const data = computed(() => {
-    // if (isPending.value && latestQuery.value && paginateOnServer) {
-    //   const { pageParams, queryParams } = latestQuery.value as any
-    //   const params = { query: { ...pageParams, ...queryParams }, paginateOnServer: true }
-    //   const values = makeUseFindItems(store, service, params).value
-    //   debugger
-    //   return values
-    // }
+    if (isPending.value && latestQuery.value && paginateOnServer) {
+      const { pageParams, queryParams } = latestQuery.value as any
+      const params = { query: { ...pageParams, ...queryParams }, paginateOnServer: true }
+      const values = makeUseFindItems(store, service, params)
+      return values
+    }
     const values = makeUseFindItems(store, service, paramsWithPagination)
     return values
   })
