@@ -98,7 +98,7 @@ export const useServiceLocal = <M extends AnyData, Q extends AnyData>(options: U
     return findInStore(params).total
   })
 
-  const getFromStore = computed(() => (id: Id | null, params?: Params<Q>): M | null => {
+  const getFromStore = (id: Id | null, params?: Params<Q>) => computed((): M | null => {
     id = unref(id)
     params = fastCopy(unref(params) || {})
 

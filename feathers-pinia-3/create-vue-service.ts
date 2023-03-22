@@ -162,7 +162,7 @@ export class VueService<Svc extends FeathersService> {
     return useFind(_params, { store: this.store, service: this })
   }
 
-  useGet(id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams>) {
+  useGet(id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams> = ref({})) {
     const _id = isRef(id) ? id : ref(id)
     const _params = isRef(params) ? params : ref(params)
     return useGet(_id, _params, { store: this.store, service: this })

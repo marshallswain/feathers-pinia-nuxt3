@@ -1,10 +1,11 @@
-import type { Id, Query } from '@feathersjs/feathers'
+import type { Id } from '@feathersjs/feathers'
 import { computed, ref, unref, watch } from 'vue-demi'
-import type { Ref } from 'vue-demi'
-import type { MaybeRef, Params, UseFindGetDeps, UseGetParams } from './types'
-import { convertData } from './utils/convert-data'
+import type { ComputedRef } from 'vue-demi'
+import type { MaybeRef, UseFindGetDeps, UseGetParams } from './types'
 
-export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>, deps: UseFindGetDeps) => {
+type MaybeComputed<M> = ComputedRef<M> | MaybeRef<M>
+
+export const useGet = (_id: MaybeComputed<Id | null>, _params: MaybeRef<UseGetParams> = ref({}), deps: UseFindGetDeps) => {
   const { store, service } = deps
 
   // normalize args into refs
@@ -12,7 +13,7 @@ export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>, deps: Us
   const params = isRef(_params) ? _params : ref(_params)
 
   /** ID & PARAMS **/
-  const { immediate = true, watch: _watch = true, onServer = false } = params.value
+  const { immediate = true, watch: _watch = true } = params.value
   const isSsr = computed(() => store.isSsr)
 
   /** REQUEST STATE **/
@@ -29,13 +30,11 @@ export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>, deps: Us
   })
   const data = computed(() => {
     if (isPending.value && mostRecentId.value != null) {
-      const result = store.getFromStore(mostRecentId.value, params as any) || null
-      const converted = convertData(service, result)
-      return converted
+      const result = store.getFromStore(mostRecentId.value, params).value
+      return result
     }
-    const result = store.getFromStore(id.value, params as any) || null
-    const converted = convertData(service, result)
-    return converted
+    const result = store.getFromStore(id.value, params).value
+    return result
   })
   const getFromStore = store.getFromStore
 
@@ -47,16 +46,16 @@ export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>, deps: Us
 
   /** SERVER FETCHING **/
   const requestCount = ref(0)
-  const request = ref(null) as any
-  const get = async (__id?: MaybeRef<Id>, params?: MaybeRef<Params<Query>>) => {
-    const _id = unref(__id || id)
+  const request = ref<any>(null)
+  async function get() {
+    const _id = unref(id)
     const _params = unref(params)
 
     if (!queryWhenFn())
       return
 
     if (_id == null)
-      throw new Error('id is required for feathers-pinia get requests')
+      return null
 
     requestCount.value++
     hasBeenRequested.value = true // never resets
@@ -65,14 +64,13 @@ export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>, deps: Us
     error.value = null
 
     try {
-      const response = await service.get(_id as Id, _params as any)
+      const response = await service.get(_id, _params)
 
       // Keep a list of retrieved ids
       if (response && _id)
         ids.value.push(_id)
 
       hasLoaded.value = true
-
       return response
     }
     catch (err: any) {
@@ -84,23 +82,9 @@ export const useGet = (_id: Ref<Id | null>, _params: Ref<UseGetParams>, deps: Us
     }
   }
 
-  const makeRequest = async (id: Id, params: MaybeRef<Params<Query>>) => {
-    if (!id)
-      return
-    request.value = get(id, params)
-    await request.value
-  }
-
   // Watch the id
-  if (onServer && _watch) {
-    watch(
-      id,
-      async () => {
-        await makeRequest(id as any, params)
-      },
-      { immediate },
-    )
-  }
+  if (_watch)
+    watch(id, async () => { await get() }, { immediate })
 
   return {
     id, // Ref<Id | null>
