@@ -1,7 +1,6 @@
 import { _ } from '@feathersjs/commons'
 import type { MaybeRef, UseFindParams } from '../types'
 import { getQueryInfo } from '../utils'
-import { convertData } from './convert-data'
 
 export const setOnRef = (obj: any, key: string, val: number) => {
   const _obj = obj.value || obj
@@ -46,29 +45,25 @@ export function getItemsFromQueryInfo(pagination: any, queryInfo: any, keyedById
  * A wrapper for findInStore that can return server-paginated data
  */
 export const makeUseFindItems = (store: any, service: any, params: any) => {
-  return computed(() => {
-    const _params: any = unref(params)
+  const _params: any = unref(params)
 
-    if (_params) {
-      if (_params.paginate || _params.onServer) {
-        const { defaultSkip, defaultLimit } = store.pagination
-        const skip = _params.query.$skip || defaultSkip
-        const limit = _params.query.$limit || defaultLimit
-        const pagination = store.pagination[_params.qid || 'default'] || {}
-        const response = (skip != null && limit != null) ? { limit, skip } : {}
-        const queryInfo = getQueryInfo(_params, response)
-        const items = getItemsFromQueryInfo(pagination, queryInfo, store.itemsById)
-        const converted = convertData(service, items)
-        return converted
-      }
-      else {
-        const result = service.findInStore(_params).data
-        const converted = convertData(service, result)
-        return converted
-      }
+  if (_params) {
+    if (_params.paginate || _params.paginateOnServer) {
+      const { defaultSkip, defaultLimit } = store.pagination
+      const skip = _params.query.$skip || defaultSkip
+      const limit = _params.query.$limit || defaultLimit
+      const pagination = store.pagination[_params.qid || 'default'] || {}
+      const response = (skip != null && limit != null) ? { limit, skip } : {}
+      const queryInfo = getQueryInfo(_params, response)
+      const items = getItemsFromQueryInfo(pagination, queryInfo, store.itemsById)
+      return items
     }
     else {
-      return []
+      const result = service.findInStore(_params).data
+      return result.value
     }
-  })
+  }
+  else {
+    return []
+  }
 }

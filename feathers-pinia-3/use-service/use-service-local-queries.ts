@@ -56,38 +56,46 @@ export const useServiceLocal = <M extends AnyData, Q extends AnyData>(options: U
     return { values, filters }
   }
 
-  const findInStore = computed(() => (params: Params<Q>) => {
-    const filtered = filterItems(params)
-    const filters = filtered.filters
-    let values = filtered.values
+  const findInStore = (params: Params<Q>) => {
+    const result = computed(() => {
+      const filtered = filterItems(params)
+      const filters = filtered.filters
+      let values = filtered.values
 
-    const total = values.length
+      const total = values.length
 
-    if (filters.$sort)
-      values.sort(sorter(filters.$sort))
+      if (filters.$sort)
+        values.sort(sorter(filters.$sort))
 
-    if (filters.$skip)
-      values = values.slice(filters.$skip)
+      if (filters.$skip)
+        values = values.slice(filters.$skip)
 
-    if (typeof filters.$limit !== 'undefined')
-      values = values.slice(0, filters.$limit)
+      if (typeof filters.$limit !== 'undefined')
+        values = values.slice(0, filters.$limit)
 
+      return {
+        total,
+        limit: filters.$limit || 0,
+        skip: filters.$skip || 0,
+        data: params.clones ? values.map((v: any) => v.clone ? v.clone(undefined, { useExisting: true }) : v) : values,
+      }
+    })
     return {
-      total,
-      limit: filters.$limit || 0,
-      skip: filters.$skip || 0,
-      data: params.clones ? values.map((v: any) => v.clone ? v.clone(undefined, { useExisting: true }) : v) : values,
+      total: computed(() => result.value.total),
+      limit: computed(() => result.value.limit),
+      skip: computed(() => result.value.skip),
+      data: computed(() => result.value.data),
     }
-  })
+  }
 
   const countInStore = computed(() => (params: Params<Q>) => {
     params = { ...unref(params) }
 
     if (!params.query)
-      throw new Error('params must contain a query-object')
+      throw new Error('params must contain a query object')
 
     params.query = _.omit(params.query, ...FILTERS)
-    return findInStore.value(params).total
+    return findInStore(params).total
   })
 
   const getFromStore = computed(() => (id: Id | null, params?: Params<Q>): M | null => {

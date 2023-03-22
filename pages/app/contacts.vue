@@ -1,3 +1,4 @@
+<!-- eslint-disable no-console -->
 <script setup lang="ts">
 import type { Contacts } from 'feathers-pinia-api'
 
@@ -39,16 +40,24 @@ const sidebarParams = computed(() => {
         { firstName: regexSearch }, { lastName: regexSearch }],
     })
   }
-  return { query, immediate: false, paginateOnServer: true }
+  return { query, immediate: false, paginateOnServer: false }
 })
 const info = api.service('contacts').useFind(sidebarParams)
-const { data: sidebarContacts, isPending, haveLoaded, next, prev, canNext, canPrev, find, isSsr, toStart } = info
+const { data: sidebarContacts, haveBeenRequested, request, isPending, haveLoaded, next, prev, canNext, canPrev, find, isSsr, toStart } = info
+// console.log(sidebarContacts)
+// debugger
 
 if (isSsr.value)
   await find({ query: { $limit: 300 } })
+  // await request.value
 
 /* All Contacts */
 const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
+const allContactsCount = api.service('contacts').countInStore({ query: {} })
+
+watchEffect(() => {
+  console.log(sidebarContacts)
+})
 </script>
 
 <template>
@@ -93,25 +102,16 @@ const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
             <div>
               <DaisyTextInput v-model="search" type="search" placeholder="search contacts" bordered class="my-3 w-full" />
 
+              <DaisyMenuTitle>
+                <span>showing {{ allContacts.length }} of {{ allContacts.length }} contacts</span>
+              </DaisyMenuTitle>
               <template v-for="contact in sidebarContacts" :key="contact._id">
                 <NuxtLink v-slot="{ navigate, isActive }" :to="`/app/contacts/${contact._id}`" custom>
                   <DaisyMenuItem @click="closeDrawer(); navigate();">
                     <DaisyFlex :class="{ active: isActive }">
                       <span class="flex-grow">{{ contact.firstName }} {{ contact.lastName }}</span>
                       <!-- Context menu for active contact -->
-                      <DaisyDropdown end>
-                        <DaisyButton is="label" v-if="isActive" ghost sm circle class="-m-2" tabindex="0">
-                          <i class="icon-[feather--menu]" />
-                        </DaisyButton>
-                        <DaisyMenu tabindex="0" class="shadow dropdown-content bg-base-200 rounded-box">
-                          <DaisyMenuItem>
-                            <DaisyButton error class="w-32" @click="openDeleteDialog(contact)">
-                              <span>Delete</span>
-                              <i class="icon-[feather--trash-2]" />
-                            </DaisyButton>
-                          </DaisyMenuItem>
-                        </DaisyMenu>
-                      </DaisyDropdown>
+                      <ContactsContextMenu v-if="isActive" @open-menu="openDeleteDialog(contact)" />
                     </DaisyFlex>
                   </DaisyMenuItem>
                 </NuxtLink>
