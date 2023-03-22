@@ -251,6 +251,17 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
     else if ((!_watch && immediate) || (immediate && (limit.value == null || limit.value == null))) {
       makeRequest()
     }
+
+    // watch realtime events and refresh
+    service.on('created', () => {
+      find()
+    })
+    service.on('patched', () => {
+      find()
+    })
+    service.on('removed', () => {
+      find()
+    })
   }
 
   return {
