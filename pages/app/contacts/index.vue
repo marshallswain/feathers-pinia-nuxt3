@@ -25,7 +25,7 @@ definePageMeta({
         <DaisyButton wide class="lg:hidden" @click="$emit('openDrawer')">
           Show Contacts
         </DaisyButton>
-        <NuxtLink v-slot="{ navigate }" to="contacts/new">
+        <NuxtLink v-slot="{ navigate }" to="/app/contacts/new">
           <DaisyButton primary wide @click="navigate">
             Add Contact
           </DaisyButton>
