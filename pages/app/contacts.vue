@@ -27,18 +27,15 @@ function handleDelete() {
 
 /* Sidebar Contacts */
 const search = ref('')
-const resultsPerPage = ref(10)
+const resultsPerPage = ref(5)
 const sidebarParams = computed(() => {
   const query = { $limit: resultsPerPage.value }
   // add these params when search is entered
   if (search.value) {
     const regexSearch = { $regex: search.value, $options: 'igm' }
-    Object.assign(query, {
-      $or: [
-        { firstName: regexSearch }, { lastName: regexSearch }],
-    })
+    Object.assign(query, { $or: [{ firstName: regexSearch }, { lastName: regexSearch }] })
   }
-  return { query, immediate: false, paginateOnServer: false }
+  return { query, immediate: true, paginateOnServer: true }
 })
 const info = api.service('contacts').useFind(sidebarParams)
 const { data: sidebarContacts, haveBeenRequested, request, isPending, haveLoaded, next, prev, canNext, canPrev, find, isSsr, toStart } = info
@@ -46,15 +43,23 @@ const { data: sidebarContacts, haveBeenRequested, request, isPending, haveLoaded
 // debugger
 
 if (isSsr.value)
-  await find({ query: { $limit: 300 } })
-  // await request.value
+  // await find({ query: { $limit: 300 } })
+  await request.value
 
 /* All Contacts */
 const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
 const allContactsCount = api.service('contacts').countInStore({ query: {} })
 
-watchEffect(() => {
-  console.log(sidebarContacts)
+// current contact
+const $route = useRoute()
+const id = computed(() => $route.params.id as string)
+const { data: currentContact } = api.service('contacts').useGet(id)
+const currentOnPage = computed(() => {
+  if (id.value == null)
+    return false
+
+  const currentIds = sidebarContacts.value.map((i: any) => i[i.__idField])
+  return currentIds.includes(id.value)
 })
 </script>
 
@@ -98,10 +103,30 @@ watchEffect(() => {
             </RouterLink>
 
             <div>
-              <DaisyTextInput v-model="search" type="search" placeholder="search contacts" bordered class="my-3 w-full" />
+              <DaisyInputGroup class="my-3">
+                <DaisyTextInput v-model="search" type="search" placeholder="search " bordered class="w-full" />
+                <DaisyButton class="relative">
+                  <i class="icon-[feather--search] relative right-0.5" />
+                  <i class="icon-[feather--chevron-down] absolute right-1" />
+                </DaisyButton>
+              </DaisyInputGroup>
+
+              <div v-if="currentContact && !currentOnPage" class="mb-6">
+                <DaisyMenuTitle>
+                  <span>current item</span>
+                </DaisyMenuTitle>
+
+                <DaisyMenuItem @click="closeDrawer()">
+                  <DaisyFlex class="active">
+                    <span class="flex-grow">{{ currentContact.firstName }} {{ currentContact.lastName }}</span>
+                    <!-- Context menu for active contact -->
+                    <ContactsContextMenu @open-menu="openDeleteDialog(currentContact)" />
+                  </DaisyFlex>
+                </DaisyMenuItem>
+              </div>
 
               <DaisyMenuTitle>
-                <span>showing {{ allContacts.length }} of {{ allContacts.length }} contacts</span>
+                <span>showing {{ sidebarContacts.length }} of {{ allContactsCount }} contacts</span>
               </DaisyMenuTitle>
               <template v-for="contact in sidebarContacts" :key="contact._id">
                 <NuxtLink v-slot="{ navigate, isActive }" :to="`/app/contacts/${contact._id}`" custom>
