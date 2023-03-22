@@ -1,7 +1,5 @@
 <!-- eslint-disable no-console -->
 <script setup lang="ts">
-import type { Contacts } from 'feathers-pinia-api'
-
 definePageMeta({
   layout: 'app',
   keepalive: true,
@@ -16,7 +14,7 @@ const modal = reactive({
   message: '',
   item: null as any,
 })
-function openDeleteDialog(contact: Contacts) {
+function openDeleteDialog(contact: Record<string, any>) {
   modal.title = `Delete ${contact.firstName} ${contact.lastName}?`
   modal.message = 'This cannot be undone.'
   modal.item = contact
