@@ -95,9 +95,12 @@ export class VueService<Svc extends FeathersService> {
 
   findInStore(params?: MaybeRef<Params<Query>>) {
     const result = this.store.findInStore(params)
-    // const converted = convertData(this, result)
-    const refs = toRefs(result)
-    return refs
+    return {
+      ...result,
+      data: computed(() => {
+        return result.data.value.map((i: any) => convertData(this, i))
+      }),
+    }
   }
 
   findOneInStore(params?: MaybeRef<Params<Query>>) {
