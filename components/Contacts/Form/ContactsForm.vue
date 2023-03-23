@@ -3,6 +3,7 @@ import { reset } from '@formkit/core'
 
 interface Props {
   contact?: Record<string, any>
+  disabled?: boolean
   /**
    * Form submission is handled through a prop instead of an event to take advantage of
    * Formkit's auto-disable feature when a promise is returned. All form elements become
@@ -23,8 +24,11 @@ defineEmits(['submit'])
       </DaisyButton>
     </DaisyTooltip>
 
+    <!-- We add a key to the FormKit so it re-initializes once the contact has an id -->
     <FormKit
       id="contact-form"
+      :key="contact?._id"
+      :disabled="disabled"
       type="form"
       :value="contact"
       @submit="handleSubmit as any"
