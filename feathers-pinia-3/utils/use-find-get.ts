@@ -7,10 +7,10 @@ export const setOnRef = (obj: any, key: string, val: number) => {
   _obj[key] = val
 }
 
-export const computedAttr = (obj: any, key: string) =>
+export const computedAttr = (obj: any, key: string, defaultVal?: any) =>
   computed({
     set: val => setOnRef(obj, key, val),
-    get: () => unref(obj)[key],
+    get: () => unref(obj)[key] || defaultVal,
   })
 
 export function makeParamsWithoutPage(params: MaybeRef<UseFindParams>) {

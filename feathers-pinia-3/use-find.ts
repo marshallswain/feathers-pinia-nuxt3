@@ -22,13 +22,11 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   const params = isRef(_params) ? _params : ref(_params)
 
   /** PARAMS **/
-  const qid = computedAttr(params.value, 'qid')
-  if (!qid.value) // Set qid to default if it was not passed in the params.
-    qid.value = 'default'
   const { immediate = true, watch: _watch = false } = params.value
+  const qid = computedAttr(params.value, 'qid', 'default')
   const query = computedAttr(params, 'query')
   const limit = computedAttr(query, '$limit')
-  const skip = computedAttr(query, '$skip')
+  const skip = computedAttr(query, '$skip', 0)
   const paramsWithPagination = computed(() => {
     const query = params.value.query || {}
     return {
