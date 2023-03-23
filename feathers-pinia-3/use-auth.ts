@@ -50,7 +50,7 @@ export const useAuth = <d extends AuthenticateData = AuthenticateData>(options: 
   const userId = ref<NullableId>(null)
   const user = computed(() => {
     const u = userService?.getFromStore(userId)
-    return u || null
+    return u.value || null
   })
 
   // error
