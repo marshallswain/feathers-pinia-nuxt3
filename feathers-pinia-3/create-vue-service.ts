@@ -52,16 +52,14 @@ export class VueService<Svc extends FeathersService> {
   async find(_params?: MaybeRef<Params<Query>>) {
     const params = getParams(_params)
     const result = await this.service.find(params as FeathersParams)
-    const converted = convertData(this, result)
-    return converted
+    return result
   }
 
   async findOne(_params?: MaybeRef<Params<Query>>) {
     const params = getParams(_params)
     const result = await this.service.find(params as FeathersParams)
     const item = (result.data || result)[0] || null
-    const converted = convertData(this, item)
-    return converted
+    return item
   }
 
   async count(_params?: MaybeRef<Params<Query>>) {
@@ -73,28 +71,24 @@ export class VueService<Svc extends FeathersService> {
   async get(id: Id, _params?: MaybeRef<Params<Query>>) {
     const params = getParams(_params)
     const result = await this.service.get(id, params)
-    const converted = convertData(this, result)
-    return converted
+    return result
   }
 
   async create(data: AnyData) {
     const result = await this.service.create(data)
-    const converted = convertData(this, result)
-    return converted
+    return result
   }
 
   async patch(id: Id, data: AnyData, _params?: MaybeRef<Params<Query>>) {
     const params = getParams(_params)
     const result = await this.service.patch(id, data, params)
-    const converted = convertData(this, result)
-    return converted
+    return result
   }
 
   async remove(id: Id, _params?: MaybeRef<Params<Query>>) {
     const params = getParams(_params)
     const result = await this.service.remove(id, params)
-    const converted = convertData(this, result)
-    return converted
+    return result
   }
 
   /* store methods accept refs and don't copy params */
