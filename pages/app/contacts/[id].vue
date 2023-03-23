@@ -1,16 +1,18 @@
 <script setup lang="ts">
+import type { Contacts } from 'feathers-pinia-api'
+import type { FeathersInstance } from '~~/feathers-pinia-3/modeling/types'
+
+interface Props {
+  contact: FeathersInstance<Contacts>
+}
+const props = defineProps<Props>()
 defineEmits(['openDrawer'])
 definePageMeta({
   layout: 'app',
 })
 
-const $route = useRoute()
-const { api } = useFeathers()
-
-const { data: contact } = api.service('contacts').useGetOnce($route.params.id as string)
-
 async function patchContact(fields: any) {
-  await contact.value.save({ diff: fields })
+  await props.contact.save({ diff: fields })
 }
 </script>
 
@@ -19,10 +21,14 @@ async function patchContact(fields: any) {
     <DaisyCard bordered>
       <DaisyCardBody class="gap-4">
         <DaisyCardTitle class="font-bold">
-          Add Contact
+          Edit Contact
         </DaisyCardTitle>
 
-        <ContactsForm :contact="contact" :handle-submit="patchContact" />
+        <ContactsForm
+          :contact="contact"
+          :handle-submit="patchContact"
+          :disabled="!contact?._id"
+        />
       </DaisyCardBody>
     </DaisyCard>
   </div>

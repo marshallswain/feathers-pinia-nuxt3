@@ -25,35 +25,32 @@ function handleDelete() {
   modal.item.remove()
 }
 
-/* Sidebar Contacts */
+/* params for sidebar contacts */
 const search = ref('')
+const debounceSearch = refDebounced(search, 500)
 const resultsPerPage = ref(5)
 const sidebarParams = computed(() => {
   const query = { $limit: resultsPerPage.value }
   // add these params when search is entered
   if (search.value) {
-    const regexSearch = { $regex: search.value, $options: 'igm' }
+    const regexSearch = { $regex: debounceSearch.value, $options: 'igm' }
     Object.assign(query, { $or: [{ firstName: regexSearch }, { lastName: regexSearch }] })
   }
   return { query, immediate: true, paginateOnServer: true }
 })
 const info = api.service('contacts').useFind(sidebarParams)
-const { data: sidebarContacts, haveBeenRequested, request, isPending, haveLoaded, next, prev, canNext, canPrev, find, isSsr, toStart } = info
-// console.log(sidebarContacts)
-// debugger
+const { data: sidebarContacts, total, currentPage, pageCount, haveBeenRequested, request, isPending, haveLoaded, next, prev, canNext, canPrev, find, isSsr, toStart } = info
 
 if (isSsr.value)
-  // await find({ query: { $limit: 300 } })
   await request.value
 
 /* All Contacts */
 const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
-const allContactsCount = api.service('contacts').countInStore({ query: {} })
 
 // current contact
 const $route = useRoute()
 const id = computed(() => $route.params.id as string)
-const { data: currentContact } = api.service('contacts').useGet(id)
+const { data: currentContact } = api.service('contacts').useGetOnce(id)
 const currentOnPage = computed(() => {
   if (id.value == null)
     return false
@@ -82,7 +79,7 @@ const currentOnPage = computed(() => {
           </DaisyButton>
         </DaisyButtonGroup>
 
-        <NuxtPage :contacts="allContacts" @open-drawer="openDrawer()" />
+        <NuxtPage :total="total" :contact="currentContact" @open-drawer="openDrawer()" />
       </DaisyDrawerLayoutContent>
 
       <DaisyDrawer v-slot="{ closeDrawer }" class="rounded-box ">
@@ -126,7 +123,7 @@ const currentOnPage = computed(() => {
               </div>
 
               <DaisyMenuTitle>
-                <span>showing {{ sidebarContacts.length }} of {{ allContactsCount }} contacts</span>
+                <span>showing {{ sidebarContacts.length }} of {{ total }} contacts</span>
               </DaisyMenuTitle>
               <template v-for="contact in sidebarContacts" :key="contact._id">
                 <NuxtLink v-slot="{ navigate, isActive }" :to="`/app/contacts/${contact._id}`" custom>
@@ -139,6 +136,20 @@ const currentOnPage = computed(() => {
                   </DaisyMenuItem>
                 </NuxtLink>
               </template>
+
+              <DaisyFlex justify-center class="pt-6">
+                <DaisyButtonGroup>
+                  <DaisyButton :disabled="!canPrev" @click="prev()">
+                    <i class="icon-[feather--chevron-left]" />
+                  </DaisyButton>
+                  <DaisyButton>
+                    Page {{ currentPage }} of {{ pageCount }}
+                  </DaisyButton>
+                  <DaisyButton :disabled="!canNext" @click="next">
+                    <i class="icon-[feather--chevron-right]" />
+                  </DaisyButton>
+                </DaisyButtonGroup>
+              </DaisyFlex>
             </div>
           </DaisyMenu>
         </DaisyFlex>

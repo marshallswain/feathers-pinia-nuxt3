@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import type { Contacts } from 'feathers-pinia-api'
-
 interface Props {
-  contacts: Contacts[]
+  total: number
 }
 defineProps<Props>()
 defineEmits(['openDrawer'])
@@ -20,7 +18,7 @@ definePageMeta({
       />
       <DaisyFlex col items-center justify-center grow class="gap-1 pt-6 pb-8 px-4 mx-auto text-center sm:text-left">
         <DaisyText bold xl>
-          You have <span class="bg-base-300 inline-block px-2 rounded">{{ contacts.length }}</span> contact{{ contacts.length === 1 ? '' : 's' }}.
+          You have <span class="bg-base-300 inline-block px-2 rounded">{{ total }}</span> contact{{ total === 1 ? '' : 's' }}.
         </DaisyText>
         <DaisyButton wide class="lg:hidden" @click="$emit('openDrawer')">
           Show Contacts
