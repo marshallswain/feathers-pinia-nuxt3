@@ -1,5 +1,5 @@
 import type { Params as FeathersParams, FeathersService, Id } from '@feathersjs/feathers'
-import type { AnyData, MaybeRef, Params, Query, UseFindParams, UseGetParams } from './types'
+import type { AnyData, MaybeRef, Params, Query, UseFindPage, UseFindParams, UseGetParams } from './types'
 import { getParams } from './utils'
 import { useFind } from './use-find'
 import { useGet } from './use-get'
@@ -154,9 +154,9 @@ export class VueService<Svc extends FeathersService> {
 
   /* hybrid methods */
 
-  useFind(params: MaybeRef<UseFindParams>) {
+  useFind(params: MaybeRef<UseFindParams>, page?: UseFindPage) {
     const _params = isRef(params) ? params : ref(params)
-    return useFind(_params, { store: this.store, service: this })
+    return useFind(_params, { store: this.store, service: this }, page)
   }
 
   useGet(id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams> = ref({})) {

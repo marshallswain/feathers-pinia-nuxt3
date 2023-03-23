@@ -95,6 +95,11 @@ export type ById<M> = Record<string | number | symbol, M>
 
 /* useFind & useGet */
 
+export interface UseFindPage {
+  limit: Ref<number>
+  skip: Ref<number>
+}
+
 export interface UseFindGetDeps {
   store: any
   service: any

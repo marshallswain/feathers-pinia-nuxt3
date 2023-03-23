@@ -3,20 +3,20 @@ import { computed, isReadonly, ref, unref, watch } from 'vue-demi'
 import type { Ref } from 'vue-demi'
 import { _ } from '@feathersjs/commons'
 import isEqual from 'fast-deep-equal'
-import type { MaybeRef, Paginated, Params, Query, QueryInfo, UseFindGetDeps, UseFindParams } from './types'
+import type { MaybeRef, Paginated, Params, Query, QueryInfo, UseFindGetDeps, UseFindPage, UseFindParams } from './types'
 import type { AnyData } from './use-service'
 import { getQueryInfo, hasOwn } from './utils'
 import { computedAttr, makeParamsWithoutPage, makeUseFindItems, updateParamsExcludePage } from './utils/use-find-get'
 import { convertData } from './utils/convert-data'
 import { usePageData } from './utils-pagination'
 
-export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
+export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps, page?: UseFindPage) => {
   const { store, service } = deps
 
   // If the _params are a computed, store them so we can watch them later.
-  let _computedParams: any
+  let computedParams: any
   if (isReadonly(_params))
-    _computedParams = _params
+    computedParams = _params
 
   // turn computed params into writable ref
   const params = isRef(_params) ? _params : ref(_params)
@@ -25,8 +25,12 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   const { immediate = true, watch: _watch = false } = params.value
   const qid = computedAttr(params.value, 'qid', 'default')
   const query = computedAttr(params, 'query')
-  const limit = computedAttr(query, '$limit')
-  const skip = computedAttr(query, '$skip', 0)
+  const limit = computedParams
+    ? (page?.limit || ref(params.value.query?.$limit || 10))
+    : (page?.limit || computedAttr(query, '$limit'))
+  const skip = computedParams
+    ? (page?.skip || ref(params.value.query?.$skip || 0))
+    : (page?.skip || computedAttr(query, '$skip', 0))
   const paramsWithPagination = computed(() => {
     const query = params.value.query || {}
     return {
@@ -131,7 +135,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   const request = ref<Promise<Paginated<AnyData>> | null>(null)
 
   async function find(__params?: MaybeRef<Params<Query>>) {
-    const ___params = unref(paginateOnServer ? params : __params)
+    const ___params = unref(paginateOnServer ? paramsWithPagination : __params)
     // if queryWhen is falsey, return early with dummy data
     if (!queryWhenFn())
       return Promise.resolve({ data: [] as AnyData[] } as Paginated<AnyData>)
@@ -186,7 +190,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
       return
 
     // Don't make a second request if no limit or skip were provided
-    if (requestCount.value === 1 && !initWithLimitOrSkip && !_computedParams) {
+    if (requestCount.value === 1 && !initWithLimitOrSkip && !computedParams) {
       initWithLimitOrSkip = true
       return
     }
@@ -208,7 +212,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
 
   if (paginateOnServer) {
     // When a read-only computed was provided, watch the params
-    if (_computedParams) {
+    if (computedParams) {
       let _cachedWatchedParams: UseFindParams
       // Run `find` whenever they change.
       const updateParams = (_params: UseFindParams) => {
@@ -224,10 +228,10 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
           makeRequest()
         }
       }
-      watch(_computedParams, updateParams, { immediate })
+      watch(computedParams, updateParams, { immediate })
     }
     // Watch the reactive params
-    else if (_watch && !_computedParams) {
+    else if (_watch && !computedParams) {
       watch(paramsWithoutPagination, () => makeRequest(), { immediate })
     }
     // If immediate is provided without limit or skip, manually run immediately
