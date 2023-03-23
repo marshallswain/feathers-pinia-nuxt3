@@ -31,7 +31,8 @@ export const usePageData = (options: Options) => {
       skip.value = newSkip
     },
     get() {
-      return pageCount.value === 0 ? 0 : Math.floor(skip.value || 0 / limit.value + 1)
+      const skipVal = skip.value || 0
+      return pageCount.value === 0 ? 0 : Math.floor(skipVal / limit.value + 1)
     },
   })
 
