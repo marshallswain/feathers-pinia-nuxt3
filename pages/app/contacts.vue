@@ -139,7 +139,7 @@ const currentOnPage = computed(() => {
 
               <DaisyFlex justify-center class="pt-6">
                 <DaisyButtonGroup>
-                  <DaisyButton :disabled="!canPrev" @click="prev()">
+                  <DaisyButton :disabled="!canPrev" @click="prev">
                     <i class="icon-[feather--chevron-left]" />
                   </DaisyButton>
                   <DaisyButton>
