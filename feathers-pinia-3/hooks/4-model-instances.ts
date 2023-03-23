@@ -3,20 +3,18 @@ import type { AnyData } from '../types'
 
 export const makeModelInstances = () => {
   return async (context: HookContext, next: NextFunction) => {
-    const modelFn = context.service.new
-
     if (next)
       await next()
 
-    if (modelFn) {
+    if (context.service.new) {
       if (Array.isArray(context.result?.data))
-        context.result.data = context.result.data.map((i: AnyData) => modelFn(i))
+        context.result.data = context.result.data.map((i: AnyData) => context.service.new(i))
 
       else if (Array.isArray(context.result))
-        context.result = context.result.map((i: AnyData) => modelFn(i))
+        context.result = context.result.map((i: AnyData) => context.service.new(i))
 
       else
-        context.result = modelFn(context.result)
+        context.result = context.service.new(context.result)
     }
   }
 }

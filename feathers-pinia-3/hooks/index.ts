@@ -12,8 +12,8 @@ export { syncStore, setPending, eventLocks, normalizeFind, skipGetIfExists, make
 export const feathersPiniaHooks = () => [
   setPending(),
   eventLocks(),
-  syncStore(),
   makeModelInstances(),
+  syncStore(),
   handleFindSsr(),
   normalizeFind(),
   skipGetIfExists(),
