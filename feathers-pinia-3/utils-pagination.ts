@@ -1,13 +1,22 @@
 import type { Ref } from 'vue-demi'
 import { computed } from 'vue-demi'
 
-export const usePageData = ($limit: Ref<number>, $skip: Ref<number>, _total: Ref<number>) => {
+interface Options {
+  limit: Ref<number>
+  skip: Ref<number>
+  total: Ref<number>
+  request: any
+  makeRequest: any
+}
+
+export const usePageData = (options: Options) => {
+  const { limit, skip, total, request, makeRequest } = options
   /**
    * The number of pages available based on the results returned in the latestQuery prop.
    */
   const pageCount = computed(() => {
-    if (_total.value)
-      return Math.ceil(_total.value / $limit.value)
+    if (total.value)
+      return Math.ceil(total.value / limit.value)
     else return 1
   })
 
@@ -18,11 +27,11 @@ export const usePageData = ($limit: Ref<number>, $skip: Ref<number>, _total: Ref
         pageNumber = 1
       else if (pageNumber > pageCount.value)
         pageNumber = pageCount.value
-      const newSkip = $limit.value * Math.floor(pageNumber - 1)
-      $skip.value = newSkip
+      const newSkip = limit.value * Math.floor(pageNumber - 1)
+      skip.value = newSkip
     },
     get() {
-      return pageCount.value === 0 ? 0 : Math.floor($skip.value / $limit.value + 1)
+      return pageCount.value === 0 ? 0 : Math.floor(skip.value || 0 / limit.value + 1)
     },
   })
 
@@ -33,11 +42,25 @@ export const usePageData = ($limit: Ref<number>, $skip: Ref<number>, _total: Ref
     return currentPage.value < pageCount.value
   })
 
-  const toStart = () => Promise.resolve((currentPage.value = 1))
-  const toEnd = () => Promise.resolve((currentPage.value = pageCount.value))
-  const toPage = (pageNumber: number) => Promise.resolve((currentPage.value = pageNumber))
-  const next = () => Promise.resolve(currentPage.value++)
-  const prev = () => Promise.resolve(currentPage.value--)
+  const awaitRequest = async () => {
+    if (request.value)
+      await request.value
+  }
+  const toStart = () => awaitRequest()
+    .then(() => Promise.resolve((currentPage.value = 1)))
+    .then(() => makeRequest())
+  const toEnd = () => awaitRequest()
+    .then(() => Promise.resolve((currentPage.value = pageCount.value)))
+    .then(() => makeRequest())
+  const toPage = (page: number) => awaitRequest()
+    .then(() => Promise.resolve((currentPage.value = page)))
+    .then(() => makeRequest())
+  const next = () => awaitRequest()
+    .then(() => Promise.resolve(currentPage.value++))
+    .then(() => makeRequest())
+  const prev = () => awaitRequest()
+    .then(() => Promise.resolve(currentPage.value--))
+    .then(() => makeRequest())
 
   return { pageCount, currentPage, canPrev, canNext, toStart, toEnd, toPage, next, prev }
 }

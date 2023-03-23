@@ -5,10 +5,10 @@ import { _ } from '@feathersjs/commons'
 import isEqual from 'fast-deep-equal'
 import type { MaybeRef, Paginated, Params, Query, QueryInfo, UseFindGetDeps, UseFindParams } from './types'
 import type { AnyData } from './use-service'
-import { usePageData } from './utils-pagination'
 import { getQueryInfo, hasOwn } from './utils'
 import { computedAttr, makeParamsWithoutPage, makeUseFindItems, updateParamsExcludePage } from './utils/use-find-get'
 import { convertData } from './utils/convert-data'
+import { usePageData } from './utils-pagination'
 
 export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   const { store, service } = deps
@@ -119,42 +119,14 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   /** QUERIES **/
   const queries: Ref<QueryInfo[]> = ref([]) // query info after the response returns
   const latestQuery = computed(() => {
+    if (paginateOnServer)
+      return store.pagination[qid.value]?.mostRecent || null
+
     return queries.value[queries.value.length - 1] || null
   })
   const previousQuery = computed(() => {
     return queries.value[queries.value.length - 2] || null
   })
-
-  /** PAGINATION DATA **/
-  const storeCount = computed(() => service.countInStore(paramsWithoutPagination.value as any))
-  const total = computed(() => {
-    if (paginateOnServer)
-      return (latestQuery.value as any)?.response.total
-    else return storeCount.value
-  })
-  const pageData = usePageData(limit, skip, total)
-  const { pageCount, currentPage, canPrev, canNext } = pageData
-
-  /** PAGINATION UTILS **/
-  const awaitRequest = async () => {
-    if (request.value)
-      await request.value
-  }
-  const toStart = () => awaitRequest()
-    .then(() => pageData.toStart())
-    .then(() => makeRequest())
-  const toEnd = () => awaitRequest()
-    .then(() => pageData.toEnd())
-    .then(() => makeRequest())
-  const toPage = (page: number) => awaitRequest()
-    .then(() => pageData.toPage(page))
-    .then(() => makeRequest())
-  const next = () => awaitRequest()
-    .then(() => pageData.next())
-    .then(() => makeRequest())
-  const prev = () => awaitRequest()
-    .then(() => pageData.prev())
-    .then(() => makeRequest())
 
   /** SERVER FETCHING **/
   const requestCount = ref(0)
@@ -222,6 +194,18 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
     request.value = find((_params || params) as any) as any
     await request.value
   }
+
+  /** PAGINATION DATA **/
+  const total = computed(() => {
+    if (paginateOnServer) {
+      return latestQuery.value?.total || 0
+    }
+    else {
+      const count = service.countInStore(paramsWithoutPagination.value)
+      return count.value
+    }
+  })
+  const { pageCount, currentPage, canPrev, canNext, toStart, toEnd, toPage, next, prev } = usePageData({ limit, skip, total, request, makeRequest })
 
   if (paginateOnServer) {
     // When a read-only computed was provided, watch the params
