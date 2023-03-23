@@ -166,8 +166,8 @@ export class VueService<Svc extends FeathersService> {
   }
 
   useGetOnce(_id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams> = {}) {
-    const _params = ref(params)
-    Object.assign(_params.value, { store: this, immediate: false, onServer: true })
+    const _params = isRef(params) ? params : ref(params)
+    Object.assign(_params.value, { immediate: false })
     const results = this.useGet(_id, _params)
     results.queryWhen(() => !results.data.value)
     results.get()
