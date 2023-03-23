@@ -129,7 +129,8 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
   /** SERVER FETCHING **/
   const requestCount = ref(0)
   const request = ref<Promise<Paginated<AnyData>> | null>(null)
-  const find = async (__params?: MaybeRef<Params<Query>>) => {
+
+  async function find(__params?: MaybeRef<Params<Query>>) {
     const ___params = unref(paginateOnServer ? params : __params)
     // if queryWhen is falsey, return early with dummy data
     if (!queryWhenFn())
@@ -189,7 +190,7 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps) => {
       initWithLimitOrSkip = true
       return
     }
-    request.value = find((_params || params) as any) as any
+    request.value = find()
     await request.value
   }
 
