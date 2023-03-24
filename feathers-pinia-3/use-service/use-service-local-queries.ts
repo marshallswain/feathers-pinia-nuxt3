@@ -112,7 +112,8 @@ export const useServiceLocal = <M extends AnyData, Q extends AnyData>(options: U
     else if (tempItem)
       item = tempItem
 
-    return (params.clones && item.clone) ? item.clone(undefined, { useExisting: true }) : (item || null)
+    const toReturn = (params.clones && item.clone) ? item.clone(undefined, { useExisting: true }) : (item || null)
+    return toReturn
   })
 
   const removeByQuery = (params: Params<Q>) => {
