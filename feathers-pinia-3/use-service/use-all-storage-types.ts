@@ -7,7 +7,6 @@ import { useServiceClones } from './use-service-clones'
 import { useServiceStorage } from './use-service-storage'
 
 interface UseAllStorageOptions {
-  getModel: () => any
   getIdField: (val: AnyData) => any
   /**
    * A callback after clearing the store. Allows loose coupling of other functionality, like clones.
@@ -16,13 +15,7 @@ interface UseAllStorageOptions {
 }
 
 export const useAllStorageTypes = <M extends AnyData>(options: UseAllStorageOptions) => {
-  const { getModel, getIdField, afterClear } = options
-
-  // Make sure the provided item is a model "instance" (in quotes because it's not a class)
-  const assureInstance = (item: AnyData) => {
-    const Model = getModel()
-    return item.__modelName ? item : Model ? Model(item as AnyData) : item
-  }
+  const { getIdField, afterClear } = options
 
   /**
    * Makes a copy of the Model instance with __isClone properly set
@@ -49,27 +42,22 @@ export const useAllStorageTypes = <M extends AnyData>(options: UseAllStorageOpti
   // item storage
   const itemStorage = useServiceStorage<M>({
     getId: getIdField,
-    onRead: assureInstance,
-    beforeWrite: assureInstance,
   })
 
   // temp item storage
   const { tempStorage, moveTempToItems } = useServiceTemps<M>({
     getId: item => item.__tempId,
     itemStorage,
-    onRead: assureInstance,
-    beforeWrite: assureInstance,
   })
 
   // clones
   const { cloneStorage, clone, commit, reset, markAsClone } = useServiceClones<M>({
     itemStorage,
     tempStorage,
-    onRead: assureInstance,
     makeCopy,
     beforeWrite: (item) => {
       markAsClone(item)
-      return assureInstance(item)
+      return item
     },
   })
 
@@ -105,12 +93,7 @@ export const useAllStorageTypes = <M extends AnyData>(options: UseAllStorageOpti
     const { items, isArray } = getArray(data)
 
     const _items = items.map((item: AnyData) => {
-      const Model = getModel()
-      const asModel = item.__Model ? item : Model(item as any)
-      if (item != null && asModel == null)
-        throw new Error('No model instance was created. Is your modelFn missing a return statement?')
-
-      const stored = addItemToStorage(asModel)
+      const stored = addItemToStorage(item as any)
       return stored
     })
 
