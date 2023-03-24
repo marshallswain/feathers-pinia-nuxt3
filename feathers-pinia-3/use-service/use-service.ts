@@ -35,7 +35,6 @@ export const useService = < M extends AnyData, Q extends Query >(_options: UseSe
   // storage
   const { itemStorage, tempStorage, cloneStorage, clone, commit, reset, removeFromStore, addToStore, clearAll }
     = useAllStorageTypes<M>({
-      getModel: () => (val: any) => val,
       getIdField: (val: AnyData) => val[idField],
       afterClear: () => {
         pendingState.clearAllPending()
