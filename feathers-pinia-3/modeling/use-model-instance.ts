@@ -1,4 +1,3 @@
-import { reactive } from 'vue-demi'
 import ObjectID from 'isomorphic-mongo-objectid'
 import type { AnyData, CloneOptions } from '../use-service'
 import { defineProperties } from '../utils/define-properties'
@@ -13,7 +12,6 @@ export const useModelInstance = <M extends AnyData>(data: ModelInstanceData<M>, 
   const { servicePath, store } = options
   const __isClone = data.__isClone || false
 
-  // The `__Model` property was added by the `useModelBase` wrapper in `use-model-base.ts`.
   const _data = data as M
 
   // instance.__isTemp
@@ -49,6 +47,5 @@ export const useModelInstance = <M extends AnyData>(data: ModelInstanceData<M>, 
   }) as M & BaseModelData & BaseModelInstanceProps<M>
 
   // make the data reactive, but ignore the proxy "Reactive" wrapper type to keep internal types simpler.
-  const newData = reactive(asBaseModel) as typeof asBaseModel
-  return newData
+  return asBaseModel
 }
