@@ -8,9 +8,9 @@ export const patchDiffing = () => async (context: HookContext, next: NextFunctio
 
   let rollbackData: any
   let clone: any
-  const shouldRun = method === 'patch' && !params.data && (data.__isClone || params.diff !== false)
+  const shouldDiff = method === 'patch' && !params.data && (data.__isClone || params.diff !== false)
 
-  if (shouldRun) {
+  if (shouldDiff) {
     clone = data
     const original = store.getFromStore(id).value
     const diffedData = diff(original, clone, params.diff)
@@ -44,7 +44,7 @@ export const patchDiffing = () => async (context: HookContext, next: NextFunctio
     await next()
   }
   catch (error) {
-    if (shouldRun) {
+    if (shouldDiff) {
       // If saving fails, reverse the eager update
       clone && clone.commit(rollbackData)
     }
