@@ -1,3 +1,4 @@
+import { BadRequest } from '@feathersjs/errors'
 import type { FeathersService, Params } from '@feathersjs/feathers'
 import type { AnyData } from '../types'
 import { defineProperties } from '../utils/define-properties'
@@ -71,11 +72,19 @@ export const useFeathersInstance = <
     },
     patch(this: M, params?: P): Promise<M> {
       const id = this[store.idField]
+      if (id === undefined)
+        throw new BadRequest('the item has no id')
       return service.patch(id, this, params).then(result => merge(this, result))
     },
     remove(this: M, params?: P): Promise<M> {
-      const id = this[store.idField]
-      return service.remove(id, params).then(result => merge(this, result))
+      if (this.__isTemp) {
+        store.removeFromStore(this.__tempId)
+        return Promise.resolve(this)
+      }
+      else {
+        const id = this[store.idField]
+        return service.remove(id, params).then(result => merge(this, result))
+      }
     },
   }
 
