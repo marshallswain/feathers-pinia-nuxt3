@@ -33,7 +33,7 @@ export const patchDiffing = () => async (context: HookContext, next: NextFunctio
     context.data = diffedData
 
     // If diff is empty, return the clone without making a request.
-    if (Object.keys(data).length === 0)
+    if (Object.keys(context.data).length === 0)
       context.result = clone
   }
   else {
