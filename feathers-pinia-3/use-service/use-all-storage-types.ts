@@ -108,9 +108,16 @@ export const useAllStorageTypes = <M extends AnyData>(options: UseAllStorageOpti
   function removeFromStore(data: M | M[]) {
     const { items } = getArray(data)
     items.forEach((item: M) => {
-      itemStorage.remove(item)
-      tempStorage.remove(item)
-      cloneStorage.remove(item)
+      if (typeof item === 'string') {
+        itemStorage.removeItem(item)
+        tempStorage.removeItem(item)
+        cloneStorage.removeItem(item)
+      }
+      else {
+        itemStorage.remove(item)
+        tempStorage.remove(item)
+        cloneStorage.remove(item)
+      }
     })
     return data
   }
