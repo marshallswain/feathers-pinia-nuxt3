@@ -117,7 +117,7 @@ export class VueService<Svc extends FeathersService> {
 
   getFromStore(id: Id, params?: MaybeRef<Params<Query>>) {
     const result = this.store.getFromStore(id, params)
-    const converted = convertData(this, result)
+    const converted = computed(() => convertData(this, result.value))
     return converted
   }
 
