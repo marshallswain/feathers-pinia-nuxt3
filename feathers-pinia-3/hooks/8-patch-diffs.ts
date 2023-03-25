@@ -12,7 +12,7 @@ export const patchDiffing = () => async (context: HookContext, next: NextFunctio
 
   if (shouldRun) {
     clone = data
-    const original = store.getFromStore(id)
+    const original = store.getFromStore(id).value
     const diffedData = diff(original, clone, params.diff)
     rollbackData = fastCopy(original)
 
