@@ -154,7 +154,7 @@ export class VueService<Svc extends FeathersService> {
 
   /* hybrid methods */
 
-  useFind(params: MaybeRef<UseFindParams>, page?: UseFindPage) {
+  useFind(params: ComputedRef<UseFindParams>, page?: UseFindPage) {
     const _params = isRef(params) ? params : ref(params)
     return useFind(_params, { store: this.store, service: this }, page)
   }
