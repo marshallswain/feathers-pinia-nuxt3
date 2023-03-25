@@ -2,7 +2,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: 'app',
-  keepalive: true,
 })
 
 const { api } = useFeathers()
@@ -28,35 +27,44 @@ function handleDelete() {
 /* params for sidebar contacts */
 const search = ref('')
 const debounceSearch = refDebounced(search, 500)
-const resultsPerPage = ref(5)
+
+const limit = ref(5)
+const skip = ref(0)
+
 const sidebarParams = computed(() => {
-  const query = { $limit: resultsPerPage.value }
+  const query = { $limit: limit.value }
   // add these params when search is entered
   if (search.value) {
     const regexSearch = { $regex: debounceSearch.value, $options: 'igm' }
     Object.assign(query, { $or: [{ firstName: regexSearch }, { lastName: regexSearch }] })
   }
-  return { query, immediate: true, paginateOnServer: true }
+  return { query, paginateOnServer: true, debounce: 10 }
 })
-const info = api.service('contacts').useFind(sidebarParams)
-const { data: sidebarContacts, total, currentPage, pageCount, haveBeenRequested, request, isPending, haveLoaded, next, prev, canNext, canPrev, find, isSsr, toStart } = info
+const info = api.service('contacts').useFind(sidebarParams, { limit, skip })
+const { data: sidebarContacts, total, currentPage, pageCount, haveBeenRequested, request, isPending, haveLoaded, next, prev, canNext, canPrev, isSsr, toStart, toEnd } = info
 
 if (isSsr.value)
   await request.value
 
-/* All Contacts */
-const { data: allContacts } = api.service('contacts').findInStore({ query: {} })
-
 // current contact
 const $route = useRoute()
 const id = computed(() => $route.params.id as string)
-const { data: currentContact } = api.service('contacts').useGetOnce(id)
+const { data: currentContact, request: getRequest, hasLoaded } = api.service('contacts').useGetOnce(id)
+if (isSsr)
+  await getRequest.value
+
 const currentOnPage = computed(() => {
   if (id.value == null)
     return false
 
   const currentIds = sidebarContacts.value.map((i: any) => i[i.__idField])
   return currentIds.includes(id.value)
+})
+const shouldShowExtra = computed(() => !currentOnPage.value && currentContact.value)
+const isExtraVisible = ref(shouldShowExtra.value)
+
+watch(() => shouldShowExtra.value, (val) => {
+  isExtraVisible.value = val
 })
 </script>
 
@@ -99,58 +107,66 @@ const currentOnPage = computed(() => {
               </DaisyButton>
             </RouterLink>
 
-            <div>
-              <DaisyInputGroup class="my-3">
-                <DaisyTextInput v-model="search" type="search" placeholder="search " bordered class="w-full" />
-                <DaisyButton class="relative">
-                  <i class="icon-[feather--search] relative right-0.5" />
-                  <i class="icon-[feather--chevron-down] absolute right-1" />
-                </DaisyButton>
-              </DaisyInputGroup>
+            <DaisyInputGroup class="my-3">
+              <DaisyTextInput v-model="search" type="search" placeholder="search " bordered class="w-full" />
+              <ContactsFilterMenu v-model:items-per-page="limit" />
+            </DaisyInputGroup>
 
-              <div v-if="currentContact && !currentOnPage" class="mb-6">
-                <DaisyMenuTitle>
-                  <span>current item</span>
-                </DaisyMenuTitle>
+            <div class="min-h-[360px]">
+              <div v-auto-animate="{ duration: 250 }" class="pb-6">
+                <div v-if="isExtraVisible">
+                  <DaisyMenuTitle>
+                    <span>current item</span>
+                  </DaisyMenuTitle>
 
-                <DaisyMenuItem @click="closeDrawer()">
-                  <DaisyFlex class="active">
-                    <span class="flex-grow">{{ currentContact.firstName }} {{ currentContact.lastName }}</span>
-                    <!-- Context menu for active contact -->
-                    <ContactsContextMenu @open-menu="openDeleteDialog(currentContact)" />
-                  </DaisyFlex>
-                </DaisyMenuItem>
+                  <ContactsMenuItem
+                    v-if="currentContact"
+                    :contact="currentContact"
+                    is-active
+                    @click="closeDrawer()"
+                    @open-menu="openDeleteDialog(currentContact)"
+                  />
+                </div>
               </div>
 
-              <DaisyMenuTitle>
-                <span>showing {{ sidebarContacts.length }} of {{ total }} contacts</span>
+              <DaisyMenuTitle class="relative">
+                <span>showing {{ sidebarContacts.length }} of {{ total }} contacts </span>
+                <i v-if="isPending" class="absolute right-0 h-6 w-6 icon-[svg-spinners--180-ring-with-bg]" />
               </DaisyMenuTitle>
-              <template v-for="contact in sidebarContacts" :key="contact._id">
-                <NuxtLink v-slot="{ navigate, isActive }" :to="`/app/contacts/${contact._id}`" custom>
-                  <DaisyMenuItem @click="closeDrawer(); navigate();">
-                    <DaisyFlex :class="{ active: isActive }">
-                      <span class="flex-grow">{{ contact.firstName }} {{ contact.lastName }}</span>
-                      <!-- Context menu for active contact -->
-                      <ContactsContextMenu v-if="isActive" @open-menu="openDeleteDialog(contact)" />
-                    </DaisyFlex>
-                  </DaisyMenuItem>
-                </NuxtLink>
-              </template>
 
-              <DaisyFlex justify-center class="pt-6">
-                <DaisyButtonGroup>
-                  <DaisyButton :disabled="!canPrev" @click="prev">
-                    <i class="icon-[feather--chevron-left]" />
-                  </DaisyButton>
-                  <DaisyButton>
-                    Page {{ currentPage }} of {{ pageCount }}
-                  </DaisyButton>
-                  <DaisyButton :disabled="!canNext" @click="next">
-                    <i class="icon-[feather--chevron-right]" />
-                  </DaisyButton>
-                </DaisyButtonGroup>
-              </DaisyFlex>
+              <div v-auto-animate="{ duration: 250 }">
+                <template v-for="contact in sidebarContacts" :key="contact?._id">
+                  <NuxtLink v-slot="{ navigate, isActive }" :to="`/app/contacts/${contact?._id}`" custom>
+                    <ContactsMenuItem
+                      :contact="contact"
+                      :is-active="isActive"
+                      @click="closeDrawer(); navigate();"
+                      @open-menu="openDeleteDialog(contact)"
+                    />
+                  </NuxtLink>
+                </template>
+              </div>
             </div>
+
+            <DaisyFlex col items-center class="pt-6">
+              <DaisyButtonGroup>
+                <DaisyButton sm :class="{ 'cursor-not-allowed bg-opacity-80 hover:bg-opacity-80': !canPrev }" @click="toStart">
+                  <i class="icon-[feather--chevrons-left]" />
+                </DaisyButton>
+                <DaisyButton sm :class="{ 'cursor-not-allowed bg-opacity-80 hover:bg-opacity-80': !canPrev }" @click="prev">
+                  <i class="icon-[feather--chevron-left]" />
+                </DaisyButton>
+                <DaisyButton sm>
+                  Page {{ currentPage }} of {{ pageCount }}
+                </DaisyButton>
+                <DaisyButton sm :class="{ 'cursor-not-allowed bg-opacity-80 hover:bg-opacity-80': !canNext }" @click="next">
+                  <i class="icon-[feather--chevron-right]" />
+                </DaisyButton>
+                <DaisyButton sm :class="{ 'cursor-not-allowed bg-opacity-80 hover:bg-opacity-80': !canNext }" @click="toEnd">
+                  <i class="icon-[feather--chevrons-right]" />
+                </DaisyButton>
+              </DaisyButtonGroup>
+            </DaisyFlex>
           </DaisyMenu>
         </DaisyFlex>
       </DaisyDrawer>
