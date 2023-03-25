@@ -1,36 +1,24 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { computed, isReadonly, ref, unref, watch } from 'vue-demi'
+import { computed, ref, unref } from 'vue-demi'
 import type { Ref } from 'vue-demi'
 import { _ } from '@feathersjs/commons'
-import isEqual from 'fast-deep-equal'
-import type { MaybeRef, Paginated, Params, Query, QueryInfo, UseFindGetDeps, UseFindPage, UseFindParams } from './types'
+import stringify from 'fast-json-stable-stringify'
+import type { Paginated, Params, Query, QueryInfo, UseFindGetDeps, UseFindPage, UseFindParams } from './types'
 import type { AnyData } from './use-service'
-import { getQueryInfo, hasOwn } from './utils'
-import { computedAttr, makeParamsWithoutPage, makeUseFindItems, updateParamsExcludePage } from './utils/use-find-get'
+import { getQueryInfo } from './utils'
+import { itemsFromPagination } from './utils/use-find-get'
 import { convertData } from './utils/convert-data'
 import { usePageData } from './utils-pagination'
 
-export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps, page?: UseFindPage) => {
+export const useFind = (params: ComputedRef<UseFindParams>, deps: UseFindGetDeps, page?: UseFindPage) => {
   const { store, service } = deps
 
-  // If the _params are a computed, store them so we can watch them later.
-  let computedParams: any
-  if (isReadonly(_params))
-    computedParams = _params
-
-  // turn computed params into writable ref
-  const params = isRef(_params) ? _params : ref(_params)
-
   /** PARAMS **/
-  const { immediate = true, watch: _watch = false } = params.value
-  const qid = computedAttr(params.value, 'qid', 'default')
-  const query = computedAttr(params, 'query')
-  const limit = computedParams
-    ? (page?.limit || ref(params.value.query?.$limit || 10))
-    : (page?.limit || computedAttr(query, '$limit'))
-  const skip = computedParams
-    ? (page?.skip || ref(params.value.query?.$skip || 0))
-    : (page?.skip || computedAttr(query, '$skip', 0))
+  const { debounce = 100, immediate = true, watch: _watch = false } = params.value
+  const qid = computed(() => params.value.qid || 'default')
+  const limit = (page?.limit || ref(params.value.query?.$limit || 10))
+  const skip = (page?.skip || ref(params.value.query?.$skip || 0))
+
   const paramsWithPagination = computed(() => {
     const query = params.value.query || {}
     return {
@@ -56,16 +44,23 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps, page?
   const error = ref<any>(null)
   const clearError = () => (error.value = null)
 
+  /** Cached Params **/
+  const cachedParams = ref(params.value)
+  function updateCachedParams() {
+    if (stringify(cachedParams.value) !== stringify(paramsWithPagination.value))
+      cachedParams.value = paramsWithPagination.value
+  }
+
   /** STORE ITEMS **/
   const data = computed(() => {
-    if (isPending.value && latestQuery.value && paginateOnServer) {
-      const { pageParams, queryParams } = latestQuery.value as any
-      const params = { query: { ...pageParams, ...queryParams }, paginateOnServer: true }
-      const values = makeUseFindItems(store, service, params)
+    if (paginateOnServer) {
+      const values = itemsFromPagination(store, service, cachedParams.value)
       return values
     }
-    const values = makeUseFindItems(store, service, paramsWithPagination)
-    return values
+    else {
+      const result = service.findInStore(params.value).data.value
+      return result.filter((i: any) => i)
+    }
   })
   const allData = computed(() => {
     if (currentQuery.value == null)
@@ -99,8 +94,6 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps, page?
     if (!qidState)
       return null
     const queryInfo = getQueryInfo(params.value)
-    delete queryInfo.response
-    delete queryInfo.isOutdated
 
     const queryState = qidState[queryInfo.queryId]
     if (!queryState)
@@ -134,33 +127,20 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps, page?
   const requestCount = ref(0)
   const request = ref<Promise<Paginated<AnyData>> | null>(null)
 
-  async function find(__params?: MaybeRef<Params<Query>>) {
+  async function find(__params?: Params<Query>) {
+    // When `paginateOnServer` is enabled, the computed params will always be used, __params ignored.
     const ___params = unref(paginateOnServer ? paramsWithPagination : __params)
+
     // if queryWhen is falsey, return early with dummy data
     if (!queryWhenFn())
       return Promise.resolve({ data: [] as AnyData[] } as Paginated<AnyData>)
 
-    requestCount.value++
-    haveBeenRequested.value = true // never resets
-    isPending.value = true
-    haveLoaded.value = false
-    error.value = null
-
     try {
       const response = await service.find(___params as any)
 
-      // Set limit and skip if missing
-      if ((hasOwn(response, 'limit') && limit.value == null) || skip.value == null) {
-        const res = response
-        if (limit.value === undefined)
-          limit.value = res.limit
-        if (skip.value === undefined)
-          skip.value = res.skip
-      }
       // Keep the two most-recent queries
       if (response.total) {
-        const res = response
-        const queryInfo = getQueryInfo(paramsWithPagination, res)
+        const queryInfo = getQueryInfo(paramsWithPagination.value)
         queries.value.push(queryInfo)
         if (queries.value.length > 2)
           queries.value.shift()
@@ -177,28 +157,37 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps, page?
       isPending.value = false
     }
   }
+  const findDebounced = useDebounceFn<any>(find, debounce)
 
-  /** QUERY WATCHING **/
-  // Keep track if no $limit or $skip was passed so we don't fetch twice when they are set from the response
-  let initWithLimitOrSkip = false
-  // provide access to the request from inside the watcher
-  if (limit.value || skip.value)
-    initWithLimitOrSkip = true
-
+  /** Query Gatekeeping **/
   const makeRequest = async (_params?: Params<Query>) => {
+    // If params are null, do nothing
+    if (_params === null)
+      return
+
     if (!paginateOnServer)
       return
 
-    // Don't make a second request if no limit or skip were provided
-    if (requestCount.value === 1 && !initWithLimitOrSkip && !computedParams) {
-      initWithLimitOrSkip = true
-      return
+    if (currentQuery.value)
+      updateCachedParams()
+
+    // if the query passes queryWhen, setup the state before the debounce timer starts.
+    if (queryWhenFn()) {
+      requestCount.value++
+      haveBeenRequested.value = true // never resets
+      isPending.value = true
+      haveLoaded.value = false
+      error.value = null
     }
-    request.value = find()
+
+    request.value = findDebounced()
     await request.value
+
+    // cache the params to update the computed `data``
+    updateCachedParams()
   }
 
-  /** PAGINATION DATA **/
+  /** Pagination Data **/
   const total = computed(() => {
     if (paginateOnServer) {
       return latestQuery.value?.total || 0
@@ -208,46 +197,33 @@ export const useFind = (_params: Ref<UseFindParams>, deps: UseFindGetDeps, page?
       return count.value
     }
   })
-  const { pageCount, currentPage, canPrev, canNext, toStart, toEnd, toPage, next, prev } = usePageData({ limit, skip, total, request, makeRequest })
+  const pageData = usePageData({ limit, skip, total, request })
+  const { pageCount, currentPage, canPrev, canNext, toStart, toEnd, toPage, next, prev } = pageData
 
+  /** Query Watching **/
   if (paginateOnServer) {
-    // When a read-only computed was provided, watch the params
-    if (computedParams) {
-      let _cachedWatchedParams: UseFindParams
-      // Run `find` whenever they change.
-      const updateParams = (_params: UseFindParams) => {
-        // If params are null, do nothing
-        if (_params == null)
-          return
+    watch(paramsWithPagination, (val: UseFindParams) => {
+      makeRequest(val)
+    }, { immediate: false })
 
-        // If params don't match the cached ones, update internal params and send request.
-        const newParams = makeParamsWithoutPage(_params)
-        if (!isEqual(_.omit(newParams, 'store'), _.omit(_cachedWatchedParams, 'store'))) {
-          _cachedWatchedParams = newParams
-          updateParamsExcludePage(params as any, newParams)
-          makeRequest()
-        }
-      }
-      watch(computedParams, updateParams, { immediate })
-    }
-    // Watch the reactive params
-    else if (_watch && !computedParams) {
-      watch(paramsWithoutPagination, () => makeRequest(), { immediate })
-    }
-    // If immediate is provided without limit or skip, manually run immediately
-    else if ((!_watch && immediate) || (immediate && (limit.value == null || limit.value == null))) {
-      makeRequest()
-    }
+    if (immediate)
+      makeRequest(paramsWithPagination.value)
 
-    // watch realtime events and refresh
+    // watch realtime events and re-query
+    // TODO: only re-query when relevant
     service.on('created', () => {
-      find()
+      makeRequest()
     })
     service.on('patched', () => {
-      find()
+      makeRequest()
     })
+
+    // if the current list had an item removed, re-query.
     service.on('removed', () => {
-      find()
+      // const id = item[service.store.idField]
+      // const currentIds = data.value.map((i: any) => i[service.store.idField])
+      // if (currentIds.includes(id))
+      makeRequest()
     })
   }
 

@@ -30,8 +30,7 @@ export interface QueryInfo {
   queryParams: Query
   pageParams: { $limit: number; $skip: number | undefined } | undefined
   pageId: string | undefined
-  response: Partial<Paginated<any>> | undefined
-  isOutdated: boolean | undefined
+  isExpired: boolean
 }
 
 export type DiffDefinition = undefined | string | string[] | Record<string, any> | false
@@ -109,6 +108,7 @@ export interface UseFindParams extends Params<Query> {
   query: Query
   paginateOnServer?: boolean
   qid?: string
+  debounce?: number
   immediate?: boolean
   watch?: boolean
 }
