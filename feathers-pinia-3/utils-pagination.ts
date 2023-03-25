@@ -6,11 +6,10 @@ interface Options {
   skip: Ref<number>
   total: Ref<number>
   request: any
-  makeRequest: any
 }
 
 export const usePageData = (options: Options) => {
-  const { limit, skip, total, request, makeRequest } = options
+  const { limit, skip, total, request } = options
   /**
    * The number of pages available based on the results returned in the latestQuery prop.
    */
@@ -47,21 +46,11 @@ export const usePageData = (options: Options) => {
     if (request.value)
       await request.value
   }
-  const toStart = () => awaitRequest()
-    .then(() => Promise.resolve((currentPage.value = 1)))
-    .then(() => makeRequest())
-  const toEnd = () => awaitRequest()
-    .then(() => Promise.resolve((currentPage.value = pageCount.value)))
-    .then(() => makeRequest())
-  const toPage = (page: number) => awaitRequest()
-    .then(() => Promise.resolve((currentPage.value = page)))
-    .then(() => makeRequest())
-  const next = () => awaitRequest()
-    .then(() => Promise.resolve(currentPage.value++))
-    .then(() => makeRequest())
-  const prev = () => awaitRequest()
-    .then(() => Promise.resolve(currentPage.value--))
-    .then(() => makeRequest())
+  const toStart = () => awaitRequest().then(() => (currentPage.value = 1))
+  const toEnd = () => awaitRequest().then(() => (currentPage.value = pageCount.value))
+  const toPage = (page: number) => awaitRequest().then(() => (currentPage.value = page))
+  const next = () => awaitRequest().then(() => currentPage.value++)
+  const prev = () => awaitRequest().then(() => currentPage.value--)
 
   return { pageCount, currentPage, canPrev, canNext, toStart, toEnd, toPage, next, prev }
 }

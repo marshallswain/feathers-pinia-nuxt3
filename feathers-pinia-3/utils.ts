@@ -3,12 +3,13 @@ import stringify from 'fast-json-stable-stringify'
 import isEqual from 'fast-deep-equal'
 import fastCopy from 'fast-copy'
 import { unref } from 'vue-demi'
-import type { AnyData, AnyDataOrArray, DiffDefinition, MaybeRef, Paginated, Params, Query, QueryInfo } from './types'
+import type { AnyData, AnyDataOrArray, DiffDefinition, MaybeRef, Params, Query, QueryInfo } from './types'
 
-export function getQueryInfo(params: AnyData = {}, response: Partial<Paginated<any>> = {}): QueryInfo {
-  const { query = {}, qid = 'default' } = params
-  const $limit = response.limit !== undefined ? response.limit : query?.$limit
-  const $skip = response.skip !== undefined ? response.skip : query?.$skip
+export function getQueryInfo(params: Params<Query>): QueryInfo {
+  const { query = {} } = params
+  const qid = params.qid || 'default'
+  const $limit = query?.$limit
+  const $skip = query?.$skip
 
   const pageParams = $limit !== undefined ? { $limit, $skip } : undefined
   const pageId = pageParams ? stringify(pageParams) : undefined
@@ -23,8 +24,7 @@ export function getQueryInfo(params: AnyData = {}, response: Partial<Paginated<a
     queryParams,
     pageParams,
     pageId,
-    response,
-    isOutdated: undefined as boolean | undefined,
+    isExpired: false,
   }
 }
 

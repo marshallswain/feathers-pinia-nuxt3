@@ -26,7 +26,7 @@ export const useServicePagination = (options: UseServicePagination) => {
     const { data, total } = response
     const ids = data.map((i: any) => getId(i, idField))
     const queriedAt = new Date().getTime()
-    const { queryId, queryParams, pageId, pageParams } = getQueryInfo({ qid, query }, response)
+    const { queryId, queryParams, pageId, pageParams } = getQueryInfo({ qid, query })
 
     if (!pagination.value[qid])
       set(pagination.value, qid, {})
@@ -74,7 +74,7 @@ export const useServicePagination = (options: UseServicePagination) => {
   }
 
   function unflagSsr(params: Params) {
-    const queryInfo = getQueryInfo(params, {})
+    const queryInfo = getQueryInfo(params)
     const { qid, queryId, pageId } = queryInfo
 
     const pageData = pagination.value[qid]?.[queryId]?.[pageId as string]
