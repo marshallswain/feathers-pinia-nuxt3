@@ -6,16 +6,17 @@ import type { BaseModelData, BaseModelInstanceProps, ModelInstanceData } from '.
 interface UseModelInstanceOptions {
   servicePath: string
   store: any
+  service?: any
 }
 
 export const useModelInstance = <M extends AnyData>(data: ModelInstanceData<M>, options: UseModelInstanceOptions) => {
   const { servicePath, store } = options
   const __isClone = data.__isClone || false
-
-  const _data = data as M
+  const service = options.service || { new: <M>(val: M) => val }
+  const setupInstance = <M>(data: M) => service.new(data)
 
   // instance.__isTemp
-  Object.defineProperty(_data, '__isTemp', {
+  Object.defineProperty(data, '__isTemp', {
     configurable: true,
     enumerable: false,
     get() {
@@ -23,29 +24,38 @@ export const useModelInstance = <M extends AnyData>(data: ModelInstanceData<M>, 
     },
   })
 
-  // ad BaseModel properties
-  const asBaseModel = defineProperties(_data, {
+  // BaseModel properties
+  const asBaseModel = defineProperties(data, {
     __servicePath: servicePath,
     __isClone,
     __idField: store.idField,
     __tempId: (data[store.idField] == null && data.__tempId == null) ? new ObjectID().toString() : (data.__tempId || undefined),
+    getClone(this: M) {
+      const id = this[this.__idField] || this.__tempId
+      const item = store.clonesById[id]
+      return item ? setupInstance(item) : null
+    },
     clone(this: M, data: Partial<M> = {}, options: CloneOptions = {}) {
-      return store.clone(this, data, options)
+      const item = store.clone(this, data, options)
+      return setupInstance(item)
     },
     commit(this: M, data: Partial<M> = {}) {
-      return store.commit(this, data, options)
+      const item = store.commit(this, data, options)
+      return setupInstance(item)
     },
     reset(this: M, data: Partial<M> = {}) {
-      return store.reset(this, data, options)
+      const item = store.reset(this, data, options)
+      return setupInstance(item)
     },
     addToStore(this: M) {
-      return store.addToStore(this)
+      const item = store.addToStore(this)
+      return setupInstance(item)
     },
     removeFromStore(this: M) {
-      return store.removeFromStore(this)
+      const item = store.removeFromStore(this)
+      return setupInstance(item)
     },
   }) as M & BaseModelData & BaseModelInstanceProps<M>
 
-  // make the data reactive, but ignore the proxy "Reactive" wrapper type to keep internal types simpler.
   return asBaseModel
 }

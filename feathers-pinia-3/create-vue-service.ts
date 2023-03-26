@@ -37,6 +37,7 @@ export class VueService<Svc extends FeathersService> {
     const asBaseModel = useModelInstance(data, {
       servicePath: this.servicePath,
       store: this.store,
+      service: this,
     })
     const asFeathersModel = useFeathersInstance(asBaseModel, {
       service: this as any,
