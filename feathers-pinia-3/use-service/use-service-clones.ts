@@ -65,10 +65,8 @@ export const useServiceClones = <M extends AnyData>(options: UseServiceClonesOpt
 
     assureOriginalIsStored(item)
 
-    if (existingClone) {
-      if (options.useExisting)
-        return existingClone as M
-      return reset(item, data)
+    if (existingClone && options.useExisting) {
+      return existingClone as M
     }
     else {
       const clone = reset(item, data)
