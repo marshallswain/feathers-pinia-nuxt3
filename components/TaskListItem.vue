@@ -1,33 +1,64 @@
 <script setup lang="ts">
-// import type { ModelInstance } from 'feathers-pinia'
 import type { Tasks } from 'feathers-pinia-api'
-// import { useClone } from 'feathers-pinia'
-// import InfoIcon from '~icons/feather/info'
+import type { FeathersInstance } from '~~/feathers-pinia-3/modeling/types'
 
 interface Props {
-  task: Tasks
+  task: FeathersInstance<Partial<Tasks>>
+  initialFocus?: boolean
+  isNew?: boolean
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['next', 'prev'])
+const emit = defineEmits(['next', 'prev', 'enter'])
 
-const _task = props.task
+const { api } = useFeathers()
 
-// Is the task wrapper focused?
+async function save() {
+  const clone = props.task.getClone()
+  if (clone) {
+    clone?.save()
+    clone?.commit()
+    setTimeout(async () => {
+      clone?.removeFromStore()
+    }, 1000)
+  }
+  else {
+    props.task.save()
+  }
+}
+
+// dynamically create clone on input focus
+const inputEl = ref()
+// const { focused: isInputFocused } = useFocus(inputEl)
+
+// taskWrapper keyboard shorctus
 const taskWrapper = ref()
-const { focused: isFocused } = useFocus(taskWrapper, { initialValue: true })
+const { focused: isWrapperFocused } = useFocusWithin(taskWrapper)
+const current = computed(() => isWrapperFocused.value ? props.task.clone(undefined, { useExisting: true }) : props.task)
 
 onKeyStroke('ArrowUp', (e) => {
-  if (isFocused.value) {
+  if (isWrapperFocused.value) {
     e.preventDefault()
     emit('prev', e)
   }
 })
 
 onKeyStroke('ArrowDown', (e) => {
-  if (isFocused.value) {
+  if (isWrapperFocused.value) {
     e.preventDefault()
     emit('next', e)
   }
+})
+
+onKeyStroke('Enter', (e) => {
+  if (isWrapperFocused.value) {
+    e.preventDefault()
+    emit('enter', e)
+  }
+})
+
+watch(isWrapperFocused, (val) => {
+  if (!val)
+    save()
 })
 </script>
 
@@ -37,15 +68,22 @@ onKeyStroke('ArrowDown', (e) => {
     row
     items-center
     class="group gap-1 focus:bg-black/10 focus:ring-0 rounded-lg px-2 -mx-2 py-1 focus:outline-none"
+    :class="{ 'bg-blue-500': isWrapperFocused }"
     tabindex="1"
   >
-    <DaisyCheckbox v-model="_task!.isComplete" class="rounded-full" />
-    <DaisyText lg class="px-3 h-8 inline-block py-1 min-w-[48px] relative -top-px left-px">
-      {{ task.description }}
-    </DaisyText>
-    <!-- <DaisyTextInput sm v-model="task.description" ghost class="w-full text-lg" /> -->
-    <!-- <DaisyButton circle ghost class="opacity-20 group-hover:opacity-100">
-        <InfoIcon class="text-xl" />
-      </DaisyButton> -->
+    <DaisyCheckbox
+      v-model="current.isComplete"
+      :primary="current.isComplete"
+      :class="{ 'border-dashed': isNew }"
+      class="rounded-full"
+    />
+    <DaisyTextInput
+      ref="inputEl"
+      v-model="current.description"
+      sm ghost class="w-full text-lg focus:border-none"
+    />
+    <DaisyButton v-if="!isNew" sm circle ghost class="hidden group-hover:block opacity-20 group-hover:opacity-100" @click="task.remove()">
+      <i class="icon-[feather--trash-2] text-xl" />
+    </DaisyButton>
   </DaisyFlex>
 </template>

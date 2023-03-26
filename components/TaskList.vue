@@ -1,15 +1,20 @@
 <script setup lang="ts">
+import type { Tasks } from 'feathers-pinia-api'
+import type { FeathersInstance } from '~~/feathers-pinia-3/modeling/types'
 const { api } = useFeathers()
 
-const fixtures = [1, 2, 3, 4, 5].map((val: number) => ({ _id: val.toString(), description: val.toString() }))
-fixtures.forEach((task: any) => api.service('tasks').createInStore(task))
-
 const { data: tasks } = api.service('tasks').findInStore({ query: {} })
+await api.service('tasks').find({ query: { $limit: 300 } })
 
-// Is focus inside the task list
-const listEl = ref()
-// const { focused } = useFocusWithin(listEl)
-useFocusWithin(listEl)
+const newTask = ref(initTask())
+function initTask() {
+  return api.service('tasks').new({ description: '', isComplete: false }) as FeathersInstance<Tasks>
+}
+watch(tasks, (val) => {
+  const temp = val.find((i: any) => i.__isTemp)
+  if (!temp)
+    newTask.value = initTask()
+})
 
 function handlePrev(e: KeyboardEvent) {
   const previousEl = (e.target as any).previousElementSibling as HTMLDivElement
@@ -51,14 +56,15 @@ function handleNext(e: KeyboardEvent) {
 
       <hr class="border-t border-base-content/20">
 
-      <DaisyFlex ref="listEl" col class="gap-1 py-1">
+      <DaisyFlex ref="listEl" v-auto-animate col class="gap-1 py-1">
         <TaskListItem
           v-for="task in tasks"
-          :key="task.description"
+          :key="task._id"
           :task="task"
           @prev="handlePrev"
           @next="handleNext"
         />
+        <TaskListItem :task="newTask" is-new />
       </DaisyFlex>
     </DaisyCardBody>
   </DaisyCard>
