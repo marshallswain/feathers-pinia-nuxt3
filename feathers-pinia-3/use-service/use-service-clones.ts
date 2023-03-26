@@ -33,7 +33,7 @@ export const useServiceClones = <M extends AnyData>(options: UseServiceClonesOpt
    * Makes sure the provided item is stored in itemStorage or tempStorage.
    * Private
    */
-  const assureOriginalIsStored = (item: M): M => {
+  function assureOriginalIsStored(item: M): M {
     // Make sure the stored version is always up to date with the latest instance data. (the instance used to call instance.clone)
     if (!item.__isClone) {
       if (itemStorage.has(item))
@@ -121,7 +121,7 @@ export const useServiceClones = <M extends AnyData>(options: UseServiceClonesOpt
     return cloneStorage.get(item)
   }
 
-  const markAsClone = (item: M) => {
+  function markAsClone(item: M) {
     Object.defineProperty(item, '__isClone', {
       writable: false,
       enumerable: false,
