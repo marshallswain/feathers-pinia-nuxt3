@@ -9,7 +9,7 @@ const logout = async () => {
 </script>
 
 <template>
-  <DaisyNavbar class="bg-neutral/30">
+  <DaisyNavbar class="bg-primary-focus/40">
     <DaisyNavbarStart>
       <NuxtLink to="/" class="flex flex-row gap-2 items-center">
         <i class="icon-[logos--feathersjs] text-2xl bg-white rounded-full flex-shrink-0" />

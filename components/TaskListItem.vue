@@ -14,16 +14,11 @@ const { api } = useFeathers()
 
 async function save() {
   const clone = props.task.getClone()
-  if (clone) {
-    clone?.save()
-    clone?.commit()
-    setTimeout(async () => {
-      clone?.removeFromStore()
-    }, 1000)
-  }
-  else {
-    props.task.save()
-  }
+  clone?.save()
+  clone?.commit()
+  setTimeout(async () => {
+    clone?.removeFromStore()
+  }, 1000)
 }
 
 // dynamically create clone on input focus
@@ -67,8 +62,8 @@ watch(isWrapperFocused, (val) => {
     ref="taskWrapper"
     row
     items-center
-    class="group gap-1 focus:bg-black/10 focus:ring-0 rounded-lg px-2 -mx-2 py-1 focus:outline-none"
-    :class="{ 'bg-blue-500': isWrapperFocused }"
+    class="group gap-1 focus:ring-0 rounded-lg px-2 -mx-2 py-1 focus:outline-none"
+    :class="{ 'focus:bg-primary-focus/10': isWrapperFocused }"
     tabindex="1"
   >
     <DaisyCheckbox

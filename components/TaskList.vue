@@ -27,7 +27,7 @@ function handleNext(e: KeyboardEvent) {
 </script>
 
 <template>
-  <DaisyCard class="bg-base-200 w-full sm:w-2/3 md:w-1/2 xl:w-1/3 transition-all duration-300">
+  <DaisyCard class="bg-base-100 shadow-xl-uniform border-base-200 w-full sm:w-2/3 md:w-1/2 xl:w-1/3 transition-all duration-300">
     <DaisyCardBody>
       <DaisyFlex row items-center justify-between>
         <DaisyText primary size="4xl" bold>
@@ -69,3 +69,9 @@ function handleNext(e: KeyboardEvent) {
     </DaisyCardBody>
   </DaisyCard>
 </template>
+
+<style>
+.shadow-xl-uniform {
+  filter: drop-shadow(0 20px 13px rgb(0 0 0 / 0.03)) drop-shadow(0 0px 8px rgb(0 0 0 / 0.12));
+}
+</style>
