@@ -101,8 +101,10 @@ export const useAllStorageTypes = <M extends AnyData>(options: UseAllStorageOpti
   }
 
   /**
-   * Removes item from all stores (items, temps, clones).
-   * Reactivity in Vue 3 might be fast enough to just remove each item and not batch.
+   * If a clone is provided, it removes the clone from the store.
+   * If a temp is provided, it removes the temp from the store.
+   * If an item is provided, the item and its associated temp and clone are removed.
+   * If a string is provided, it removes any item, temp, or clone from the stores.
    * @param data
    */
   function removeFromStore(data: M | M[]) {
@@ -114,6 +116,12 @@ export const useAllStorageTypes = <M extends AnyData>(options: UseAllStorageOpti
         cloneStorage.removeItem(item)
       }
       else {
+        if ((item as M).__isClone)
+          return cloneStorage.remove(item as M)
+
+        if ((item as M).__isTemp)
+          return tempStorage.remove(item as M)
+
         itemStorage.remove(item)
         tempStorage.remove(item)
         cloneStorage.remove(item)
