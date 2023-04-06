@@ -1,8 +1,8 @@
 import type { Id } from '@feathersjs/feathers'
-import { del, reactive, set } from 'vue-demi'
 import type { MaybeArray } from '../types'
-import { getArray } from '../utils'
 import type { EventLocks, EventName } from './types'
+import { del, reactive, set } from 'vue-demi'
+import { getArray } from '../utils'
 
 export const useServiceEventLocks = () => {
   const eventLocks = reactive<EventLocks>({
@@ -18,8 +18,7 @@ export const useServiceEventLocks = () => {
       const currentLock = eventLocks[event][id]
       if (currentLock) {
         clearEventLock(data, event)
-      }
-      else {
+      } else {
         set(eventLocks[event], id, true)
         // auto-clear event lock after 250 ms
         setTimeout(() => {

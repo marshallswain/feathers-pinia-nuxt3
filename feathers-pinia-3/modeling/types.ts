@@ -1,5 +1,5 @@
 import type { AnyData, PatchParams } from '../types'
-import type { CloneOptions } from '../use-service'
+import type { CloneOptions } from '../use-data-store'
 
 export interface BaseModelData {
   /**
@@ -46,7 +46,7 @@ export interface BaseModelInstanceProps<M extends AnyData = AnyData> {
   /**
    * Returns the item's clone from the store, if one exists.
    */
-  getClone<N extends AnyData>(this: N): N | null
+  hasClone<N extends AnyData>(this: N): N | null
   /**
    * Creates a copy of an item or temp record. The copy will have `__isClone` set to `true` and will be added to the
    * Model's clone storage. If not already stored, the original item  will be added to the appropriate store.
@@ -71,7 +71,7 @@ export interface BaseModelInstanceProps<M extends AnyData = AnyData> {
    * Adds the current instance to the appropriate store. If the instance is a clone, it will be added to `clones`. If it
    * has an `idField`, it will be added to items, otherwise it will be added to temps.
    */
-  addToStore<N extends AnyData>(this: N): N
+  createInStore<N extends AnyData>(this: N): N
   /**
    * Removes the current instance from items, temps, and clones.
    */
@@ -81,7 +81,11 @@ export interface BaseModelInstanceProps<M extends AnyData = AnyData> {
 export type ModelInstanceData<M extends AnyData> = Partial<M & BaseModelData>
 export type ModelInstance<M extends AnyData> = ModelInstanceData<M> & BaseModelInstanceProps<M>
 
-export interface FeathersInstanceProps<M extends AnyData, Q extends AnyData, P extends PatchParams<Q> = PatchParams<Q>> {
+export interface FeathersInstanceProps<
+  M extends AnyData,
+  Q extends AnyData,
+  P extends PatchParams<Q> = PatchParams<Q>,
+> {
   readonly isSavePending: boolean
   readonly isCreatePending: boolean
   readonly isPatchPending: boolean
@@ -92,5 +96,5 @@ export interface FeathersInstanceProps<M extends AnyData, Q extends AnyData, P e
   remove: (this: ModelInstance<M>, params?: P) => Promise<M>
 }
 export type FeathersInstance<M extends AnyData, Q extends AnyData = AnyData> = ModelInstanceData<M> &
-BaseModelInstanceProps<M> &
-FeathersInstanceProps<M, Q>
+  BaseModelInstanceProps<M> &
+  FeathersInstanceProps<M, Q>

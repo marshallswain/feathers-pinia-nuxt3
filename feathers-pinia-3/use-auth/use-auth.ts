@@ -1,16 +1,16 @@
 import type { Ref } from 'vue-demi'
+import type { NullableId } from '@feathersjs/feathers'
 import { computed, ref } from 'vue-demi'
 import { BadRequest } from '@feathersjs/errors'
 import decode from 'jwt-decode'
-import type { NullableId } from '@feathersjs/feathers'
-import { useCounter } from './utils/use-counter'
+import { useCounter } from '../utils/use-counter'
 
 type SuccessHandler = (result: Record<string, any>) => Promise<Record<string, any> | void>
 type ErrorHandler = (error: Error) => Promise<void>
 
 interface UseAuthOptions {
   api: any
-  userServicePath?: string
+  servicePath?: string
   skipTokenCheck?: boolean
   entityKey?: string
   onSuccess?: SuccessHandler
@@ -28,9 +28,9 @@ interface AuthenticateData {
   password?: string
 }
 
-export const useAuth = <d extends AuthenticateData = AuthenticateData>(options: UseAuthOptions) => {
-  const { api, userServicePath, skipTokenCheck } = options
-  const userService = userServicePath ? api.service(userServicePath) : null
+export function useAuth<d extends AuthenticateData = AuthenticateData>(options: UseAuthOptions) {
+  const { api, servicePath, skipTokenCheck } = options
+  const entityService = servicePath ? api.service(servicePath) : null
   const entityKey = options.entityKey || 'user'
 
   // external flow
@@ -49,7 +49,9 @@ export const useAuth = <d extends AuthenticateData = AuthenticateData>(options: 
   // user
   const userId = ref<NullableId>(null)
   const user = computed(() => {
-    const u = userService?.getFromStore(userId)
+    if (!entityService)
+      return null
+    const u = entityService?.getFromStore(userId)
     return u.value || null
   })
 
@@ -63,9 +65,9 @@ export const useAuth = <d extends AuthenticateData = AuthenticateData>(options: 
   const isAuthenticated = ref(false)
   const handleAuthResult = (result: any) => {
     const entity = result[entityKey]
-    if (userService && entity) {
-      const stored = userService.store.addToStore(entity)
-      userId.value = stored[userService.store.idField] || stored.__tempId
+    if (entityService && entity) {
+      const stored = entityService.store.createInStore(entity)
+      userId.value = stored[entityService.store.idField] || stored.__tempId
     }
     isAuthenticated.value = true
     return result

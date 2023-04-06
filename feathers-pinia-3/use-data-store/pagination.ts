@@ -1,7 +1,8 @@
 import type { Params } from '@feathersjs/feathers'
-import { type ComputedRef, type Ref, ref, set } from 'vue-demi'
-import { getId, getQueryInfo, hasOwn } from '../utils'
+import type { ComputedRef, Ref } from 'vue-demi'
 import type { PaginationState, UpdatePaginationForQueryOptions } from './types'
+import { ref, set } from 'vue-demi'
+import { getId, getQueryInfo, hasOwn } from '../utils'
 
 export interface UseServicePagination {
   idField: string
@@ -12,6 +13,11 @@ export const useServicePagination = (options: UseServicePagination) => {
   const { idField, isSsr } = options
 
   const pagination = ref({}) as Ref<PaginationState>
+
+  function clearPagination() {
+    const { defaultLimit, defaultSkip } = pagination.value
+    pagination.value = { defaultLimit, defaultSkip } as any
+  }
 
   /**
    * Stores pagination data on state.pagination based on the query identifier
@@ -28,14 +34,11 @@ export const useServicePagination = (options: UseServicePagination) => {
     const queriedAt = new Date().getTime()
     const { queryId, queryParams, pageId, pageParams } = getQueryInfo({ qid, query })
 
-    if (!pagination.value[qid])
-      set(pagination.value, qid, {})
+    if (!pagination.value[qid]) set(pagination.value, qid, {})
 
-    if (!hasOwn(query, '$limit') && hasOwn(response, 'limit'))
-      set(pagination.value, 'defaultLimit', response.limit)
+    if (!hasOwn(query, '$limit') && hasOwn(response, 'limit')) set(pagination.value, 'defaultLimit', response.limit)
 
-    if (!hasOwn(query, '$skip') && hasOwn(response, 'skip'))
-      set(pagination.value, 'defaultSkip', response.skip)
+    if (!hasOwn(query, '$skip') && hasOwn(response, 'skip')) set(pagination.value, 'defaultSkip', response.skip)
 
     const mostRecent = {
       query,
@@ -85,5 +88,6 @@ export const useServicePagination = (options: UseServicePagination) => {
     pagination,
     updatePaginationForQuery,
     unflagSsr,
+    clearPagination,
   }
 }

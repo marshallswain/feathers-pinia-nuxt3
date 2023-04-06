@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import type { Id } from '@feathersjs/feathers'
+import type { ById, AnyData } from '../types'
+import type { AssignFn, beforeWriteFn, onReadFn } from './types'
 import { computed, reactive, del as vueDel, set as vueSet } from 'vue-demi'
-import type { ById } from '../types'
-import type { AnyData, AssignFn, beforeWriteFn, onReadFn } from './types'
 
 interface UseServiceStorageOptions<M extends AnyData> {
   getId: (item: M) => string
@@ -18,8 +17,8 @@ export type StorageMapUtils<M extends AnyData> = ReturnType<typeof useServiceSto
  */
 export const useServiceStorage = <M extends AnyData>({
   getId,
-  onRead = item => item,
-  beforeWrite = item => item,
+  onRead = (item) => item,
+  beforeWrite = (item) => item,
   assign = (dest, src) => Object.assign(dest, src),
 }: UseServiceStorageOptions<M>) => {
   const byId: ById<M> = reactive({})
@@ -60,11 +59,8 @@ export const useServiceStorage = <M extends AnyData>({
   const merge = (item: M) => {
     const id = getId(item) as Id
     const existing = getItem(id)
-    if (existing)
-      assign(existing, item)
-
-    else
-      setItem(id, item)
+    if (existing) assign(existing, item)
+    else setItem(id, item)
 
     return getItem(id)
   }
@@ -101,8 +97,7 @@ export const useServiceStorage = <M extends AnyData>({
   }
 
   const setItem = (id: Id, item: M) => {
-    if (id == null)
-      throw new Error('item has no id')
+    if (id == null) throw new Error('item has no id')
     vueSet(byId, id, beforeWrite(item))
     return getItem(id)
   }
@@ -124,8 +119,7 @@ export const useServiceStorage = <M extends AnyData>({
    */
   const removeItem = (id: Id) => {
     const hadItem = hasItem(id)
-    if (hadItem)
-      vueDel(byId, id)
+    if (hadItem) vueDel(byId, id)
 
     return hadItem
   }

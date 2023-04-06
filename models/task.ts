@@ -1,7 +1,7 @@
-import { type ModelInstance } from 'feathers-pinia'
 import type { Tasks } from 'feathers-pinia-api'
+import type { FeathersInstance } from 'feathers-pinia'
 
-export const setupTask = (data: ModelInstance<Tasks>) => {
+export function setupTask(data: FeathersInstance<Tasks>): Record<string, any> {
   const defaults = {
     description: '',
     isComplete: false,
@@ -12,7 +12,7 @@ export const setupTask = (data: ModelInstance<Tasks>) => {
   // const User = useUserModel() as any
   // const withUser = associateGet(withDefaults, 'user', {
   //   Model: User,
-  //   getId: (data: ModelInstance<Tasks>) => data.userId as string,
+  //   getId: (data: FeathersInstance<Tasks>) => data.userId as string,
   // })
   return withDefaults
 }

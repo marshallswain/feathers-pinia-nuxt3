@@ -1,6 +1,10 @@
+import type { MaybeRef } from '@vueuse/core'
+import type { Ref } from 'vue-demi'
 import { _ } from '@feathersjs/commons'
-import type { MaybeRef, Params, Query, UseFindParams } from '../types'
+import { unref } from 'vue-demi'
 import { getQueryInfo } from '../utils'
+import type { Params, Query } from '../types'
+import type { UseFindParams } from './types'
 
 export function makeParamsWithoutPage(params: MaybeRef<UseFindParams>) {
   params = unref(params)
@@ -34,9 +38,11 @@ export function itemsFromPagination(store: any, service: any, params: Params<Que
   const pagination = store.pagination[qid] || {}
   const queryInfo = getQueryInfo(params)
   const ids = getIdsFromQueryInfo(pagination, queryInfo)
-  const items = ids.map((id) => {
-    const fromStore = service.getFromStore(id).value
-    return fromStore
-  }).filter(i => i) // filter out undefined values
+  const items = ids
+    .map((id) => {
+      const fromStore = service.getFromStore(id).value
+      return fromStore
+    })
+    .filter(i => i) // filter out undefined values
   return items
 }

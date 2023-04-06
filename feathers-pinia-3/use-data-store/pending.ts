@@ -1,7 +1,7 @@
 import type { NullableId } from '@feathersjs/feathers'
 import type { Ref } from 'vue-demi'
-import { computed, del, ref, set } from 'vue-demi'
 import type { RequestTypeById } from './types'
+import { computed, del, ref, set } from 'vue-demi'
 
 const defaultPending = () => ({
   find: 0,
@@ -50,39 +50,27 @@ export const useServicePending = () => {
   })
 
   function setPending(method: 'find' | 'count' | 'get' | 'create' | 'update' | 'patch' | 'remove', value: boolean) {
-    if (value)
-      isPending.value[method]++
-
-    else
-      isPending.value[method]--
+    if (value) isPending.value[method]++
+    else isPending.value[method]--
   }
 
   function setPendingById(id: NullableId, method: RequestTypeById, val: boolean) {
-    if (id == null)
-      return
+    if (id == null) return
 
     let place
 
-    if (method === 'create')
-      place = createPendingById.value
-    else if (method === 'update')
-      place = updatePendingById.value
-    else if (method === 'patch')
-      place = patchPendingById.value
-    else if (method === 'remove')
-      place = removePendingById.value
+    if (method === 'create') place = createPendingById.value
+    else if (method === 'update') place = updatePendingById.value
+    else if (method === 'patch') place = patchPendingById.value
+    else if (method === 'remove') place = removePendingById.value
 
-    if (val)
-      set(place, id, true)
-
-    else
-      del(place, id)
+    if (val) set(place, id, true)
+    else del(place, id)
   }
 
   function unsetPendingById(...ids: NullableId[]) {
     ids.forEach((id) => {
-      if (id == null)
-        return
+      if (id == null) return
       del(createPendingById.value, id)
       del(updatePendingById.value, id)
       del(patchPendingById.value, id)

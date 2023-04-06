@@ -32,19 +32,22 @@ const limit = ref(5)
 const skip = ref(0)
 
 const sidebarParams = computed(() => {
-  const query = { $limit: limit.value }
+  const query = { }
   // add these params when search is entered
   if (search.value) {
     const regexSearch = { $regex: debounceSearch.value, $options: 'igm' }
     Object.assign(query, { $or: [{ firstName: regexSearch }, { lastName: regexSearch }] })
   }
-  return { query, paginateOnServer: true, debounce: 10 }
+  return { query }
 })
-const info = api.service('contacts').useFind(sidebarParams, { limit, skip })
+const service = api.service('contacts')
+const info = service.useFind(sidebarParams, { pagination: { limit, skip }, paginateOnServer: true, debounce: 10 })
 const { data: sidebarContacts, total, currentPage, pageCount, haveBeenRequested, request, isPending, haveLoaded, next, prev, canNext, canPrev, isSsr, toStart, toEnd } = info
 
 if (isSsr.value)
   await request.value
+
+console.log(total.value)
 
 // current contact
 const $route = useRoute()
@@ -131,6 +134,7 @@ watch(() => shouldShowExtra.value, (val) => {
 
               <DaisyMenuTitle class="relative">
                 <span>showing {{ sidebarContacts.length }} of {{ total }} contacts </span>
+                {{ isPending }}
                 <i v-if="isPending" class="absolute right-0 h-6 w-6 icon-[svg-spinners--180-ring-with-bg]" />
               </DaisyMenuTitle>
 

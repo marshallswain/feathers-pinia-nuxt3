@@ -1,51 +1,37 @@
 import type { Params as FeathersParams, FeathersService, Id } from '@feathersjs/feathers'
-import type { AnyData, MaybeRef, Params, Query, UseFindPage, UseFindParams, UseGetParams } from './types'
+import type { AnyData, Params, Query } from './types'
+import type { MaybeRef } from '@vueuse/core'
+import type { UseFindOptions, UseFindPage, UseFindParams, UseGetParams } from './use-find-get'
+import type { ComputedRef } from 'vue-demi'
+import { reactive, computed, isRef, ref, unref } from 'vue-demi'
 import { getParams } from './utils'
-import { useFind } from './use-find'
-import { useGet } from './use-get'
-import { useModelInstance } from './modeling/use-model-instance'
-import { useFeathersInstance } from './modeling/use-feathers-instance'
+import { useFind, useGet } from './use-find-get'
 import { convertData } from './utils/convert-data'
+import { FeathersInstance } from './modeling'
 
-interface VueServiceOptions {
+interface PiniaServiceOptions {
   servicePath: string
   store: any
-  setupFn?: <D extends AnyData>(data: D) => D
 }
 
-export class VueService<Svc extends FeathersService> {
+export class PiniaService<Svc extends FeathersService> {
   store
   servicePath = ''
-  private setupFn
 
-  constructor(public service: Svc, public options: VueServiceOptions) {
+  constructor(public service: Svc, public options: PiniaServiceOptions) {
     this.store = options.store
-    this.setupFn = options.setupFn
     this.servicePath = options.servicePath
   }
 
-  /* prepare new "instances" outside of store */
-
   /**
+   * Prepare new "instances" outside of store
+   *
    * Functionally upgrades plain data to a service model "instance".
    * - flags each record with `__isSetup` to avoid duplicate work.
    */
   new(data: AnyData = {}) {
-    if (data.__isSetup)
-      return data
-
-    const asBaseModel = useModelInstance(data, {
-      servicePath: this.servicePath,
-      store: this.store,
-      service: this,
-    })
-    const asFeathersModel = useFeathersInstance(asBaseModel, {
-      service: this as any,
-      store: this.store,
-    })
-    const afterSetup = this.setupFn ? this.setupFn(asFeathersModel) : asFeathersModel
-    Object.defineProperty(afterSetup, '__isSetup', { value: true })
-    return reactive(afterSetup)
+    const asInstance = this.store.new(data)
+    return reactive(asInstance)
   }
 
   /* service methods clone params */
@@ -105,10 +91,8 @@ export class VueService<Svc extends FeathersService> {
   }
 
   findOneInStore(params?: MaybeRef<Params<Query>>) {
-    const result = this.store.findInStore(params)
-    const item = result.data[0] || null
-    const converted = convertData(this, item)
-    return converted
+    const result = this.store.findOneInStore(params)
+    return result
   }
 
   countInStore(params?: MaybeRef<Params<Query>>) {
@@ -116,15 +100,15 @@ export class VueService<Svc extends FeathersService> {
     return result
   }
 
-  getFromStore(id: Id, params?: MaybeRef<Params<Query>>) {
+  getFromStore(id: Id, params?: MaybeRef<Params<Query>>): ComputedRef<FeathersInstance<AnyData>> {
     const result = this.store.getFromStore(id, params)
-    const converted = computed(() => convertData(this, result.value))
+    const converted = computed(() => convertData(this, result.value) as FeathersInstance<AnyData>)
     return converted
   }
 
   createInStore(data: AnyData) {
     const convertedInput = convertData(this, data)
-    const result = this.store.addToStore(convertedInput)
+    const result = this.store.createInStore(convertedInput)
     const converted = convertData(this, result)
     return converted
   }
@@ -145,8 +129,7 @@ export class VueService<Svc extends FeathersService> {
       const result = this.store.removeFromStore(item)
       const converted = convertData(this, result)
       return converted
-    }
-    else if (id == null && unref(params)?.query) {
+    } else if (id == null && unref(params)?.query) {
       const result = this.store.removeByQuery(params)
       const converted = convertData(this, result)
       return converted
@@ -155,9 +138,9 @@ export class VueService<Svc extends FeathersService> {
 
   /* hybrid methods */
 
-  useFind(params: ComputedRef<UseFindParams>, page?: UseFindPage) {
+  useFind(params: ComputedRef<UseFindParams | null>, options?: UseFindOptions) {
     const _params = isRef(params) ? params : ref(params)
-    return useFind(_params, { store: this.store, service: this }, page)
+    return useFind(_params, options, { store: this.store, service: this })
   }
 
   useGet(id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams> = ref({})) {
@@ -173,5 +156,19 @@ export class VueService<Svc extends FeathersService> {
     results.queryWhen(() => !results.data.value)
     results.get()
     return results
+  }
+
+  /* events */
+
+  on(eventName: string | symbol, listener: (...args: any[]) => void) {
+    return this.service.on(eventName, listener)
+  }
+
+  emit(eventName: string | symbol, ...args: any[]): boolean {
+    return this.service.emit(eventName, ...args)
+  }
+
+  removeListener(eventName: string | symbol, listener: (...args: any[]) => void) {
+    return this.service.removeListener(eventName, listener)
   }
 }

@@ -1,5 +1,7 @@
-import { type StorageMapUtils, useServiceStorage } from './use-service-storage'
-import type { AnyData, beforeWriteFn, onReadFn } from './types'
+import type { AnyData } from '../types'
+import type { beforeWriteFn, onReadFn } from './types'
+import type { StorageMapUtils } from './storage'
+import { useServiceStorage } from './storage'
 
 interface UseServiceTempsOptions<M extends AnyData> {
   getId: (item: M) => string
@@ -18,8 +20,7 @@ export const useServiceTemps = <M extends AnyData>(options: UseServiceTempsOptio
   })
 
   function moveTempToItems(data: M) {
-    if (tempStorage.has(data))
-      tempStorage.remove(data)
+    if (tempStorage.has(data)) tempStorage.remove(data)
 
     return itemStorage.set(data)
   }

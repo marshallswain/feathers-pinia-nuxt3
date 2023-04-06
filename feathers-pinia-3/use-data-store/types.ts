@@ -1,6 +1,8 @@
 import type { ComputedRef, Ref } from 'vue-demi'
 import type { Id, Query } from '@feathersjs/feathers'
-import type { MaybeArray, MaybeRef, Paginated, Params, QueryInfo } from '../types'
+import type { MaybeRef } from '@vueuse/core'
+import type { AnyData, Paginated, Params, QueryInfo } from '../types'
+import type { useFind } from '../use-find-get/use-find'
 
 export interface FindResponseAlwaysData<M extends AnyData> {
   data: M | M[]
@@ -19,14 +21,12 @@ export type EventLocks = {
 
 export type RequestTypeById = 'create' | 'patch' | 'update' | 'remove'
 
-export type AnyData = Record<string, any>
-export type AnyDataOrArray<M extends AnyData> = MaybeArray<M>
-
 interface QueryPagination {
   $limit: number
   $skip: number
 }
-interface MostRecentQuery {
+
+export interface MostRecentQuery {
   pageId: string
   pageParams: QueryPagination
   queriedAt: number
@@ -34,15 +34,6 @@ interface MostRecentQuery {
   queryId: string
   queryParams: Query
   total: number
-}
-
-export interface CurrentQuery<M extends AnyData> extends MostRecentQuery {
-  qid: string
-  ids: number[]
-  items: M[]
-  total: number
-  queriedAt: number
-  queryState: PaginationStateQuery
 }
 
 /**
@@ -100,7 +91,10 @@ export interface HandleFindResponseOptions<M extends AnyData, Q extends Query = 
   params: Params<Q>
   response: M[] | Paginated<M>
 }
-export interface HandleFindErrorOptions<Q extends Query> { params: Params<Q>; error: any }
+export interface HandleFindErrorOptions<Q extends Query> {
+  params: Params<Q>
+  error: any
+}
 
 // The find action will always return data at params.data, even for non-paginated requests.
 // export type FindFn<C extends ModelConstructor = ModelConstructor, M extends InstanceType<C> = InstanceType<C>> = (

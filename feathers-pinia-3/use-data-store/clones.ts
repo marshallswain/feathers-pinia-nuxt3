@@ -1,9 +1,9 @@
-import fastCopy from 'fast-copy'
+import type { AnyData, MakeCopyOptions } from '../types'
+import type { CloneOptions, beforeWriteFn, onReadFn } from './types'
+import type { StorageMapUtils } from './storage'
+import { useServiceStorage } from './storage'
 import { del as vueDelete } from 'vue-demi'
-import type { MakeCopyOptions } from '../types'
-import type { AnyData, CloneOptions, beforeWriteFn, onReadFn } from './types'
-import { type StorageMapUtils, useServiceStorage } from './use-service-storage'
-// import { copyAssociations } from '../utils'
+import fastCopy from 'fast-copy'
 
 export interface UseServiceClonesOptions<M extends AnyData> {
   itemStorage: StorageMapUtils<M>
@@ -36,19 +36,13 @@ export const useServiceClones = <M extends AnyData>(options: UseServiceClonesOpt
   function assureOriginalIsStored(item: M): M {
     // Make sure the stored version is always up to date with the latest instance data. (the instance used to call instance.clone)
     if (!item.__isClone) {
-      if (itemStorage.has(item))
-        itemStorage.merge(item)
-
-      else if (tempStorage.has(item))
-        tempStorage.merge(item)
+      if (itemStorage.has(item)) itemStorage.merge(item)
+      else if (tempStorage.has(item)) tempStorage.merge(item)
     }
     const existingItem = itemStorage.get(item) || tempStorage.get(item)
     if (!existingItem) {
-      if (itemStorage.getId(item) != null)
-        itemStorage.merge(item)
-
-      else if (tempStorage.getId(item) != null)
-        tempStorage.merge(item)
+      if (itemStorage.getId(item) != null) itemStorage.merge(item)
+      else if (tempStorage.getId(item) != null) tempStorage.merge(item)
     }
     return itemStorage.get(item) || tempStorage.get(item)
   }
@@ -67,8 +61,7 @@ export const useServiceClones = <M extends AnyData>(options: UseServiceClonesOpt
 
     if (existingClone && options.useExisting) {
       return existingClone as M
-    }
-    else {
+    } else {
       const clone = reset(item, data)
       return clone as M
     }
@@ -88,8 +81,7 @@ export const useServiceClones = <M extends AnyData>(options: UseServiceClonesOpt
     if (itemId) {
       itemStorage.merge(_item)
       return itemStorage.get(_item)
-    }
-    else {
+    } else {
       tempStorage.merge(_item)
       return tempStorage.get(_item)
     }
@@ -109,12 +101,10 @@ export const useServiceClones = <M extends AnyData>(options: UseServiceClonesOpt
     if (existingClone) {
       const copied = makeCopy(original, data, { isClone: true })
       Object.keys(original).forEach((key) => {
-        if (original[key] == null)
-          vueDelete(copied, key)
+        if (original[key] == null) vueDelete(copied, key)
       })
       cloneStorage.merge(copied)
-    }
-    else {
+    } else {
       const copied = makeCopy(item, data, { isClone: true })
       cloneStorage.set(copied)
     }

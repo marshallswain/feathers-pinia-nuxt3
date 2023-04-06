@@ -1,3 +1,5 @@
+import { ref } from 'vue-demi'
+
 /**
  * Use a counter to track the number of pending queries. Prevents collisions with overlapping queries.
  */

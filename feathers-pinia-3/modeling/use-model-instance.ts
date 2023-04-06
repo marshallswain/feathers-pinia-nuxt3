@@ -1,19 +1,27 @@
-import ObjectID from 'isomorphic-mongo-objectid'
-import type { AnyData, CloneOptions } from '../use-service'
-import { defineProperties } from '../utils/define-properties'
+import type { CloneOptions } from '../use-data-store'
+import type { AnyData, ById } from '../types'
 import type { BaseModelData, BaseModelInstanceProps, ModelInstanceData } from './types'
+import ObjectID from 'isomorphic-mongo-objectid'
+import { defineValues } from '../utils/define-properties'
 
-interface UseModelInstanceOptions {
-  servicePath: string
-  store: any
-  service?: any
+interface UseModelInstanceOptions<M> {
+  idField: string
+  clonesById: ById<AnyData>
+  clone: (item: M, data?: {}, options?: CloneOptions) => M
+  commit: (item: M, data?: Partial<M>) => M
+  reset: (item: M, data?: {}) => M
+  createInStore: (data: M | M[]) => M | M[]
+  removeFromStore: (data: M | M[]) => M | M[]
 }
 
-export const useModelInstance = <M extends AnyData>(data: ModelInstanceData<M>, options: UseModelInstanceOptions) => {
-  const { servicePath, store } = options
+export const useModelInstance = <M extends AnyData>(
+  data: ModelInstanceData<M>,
+  options: UseModelInstanceOptions<M>,
+) => {
+  if (data.__isBaseInstance) return data
+
+  const { idField, clonesById, clone, commit, reset, createInStore, removeFromStore } = options
   const __isClone = data.__isClone || false
-  const service = options.service || { new: <M>(val: M) => val }
-  const setupInstance = <M>(data: M) => service.new(data)
 
   // instance.__isTemp
   Object.defineProperty(data, '__isTemp', {
@@ -25,35 +33,35 @@ export const useModelInstance = <M extends AnyData>(data: ModelInstanceData<M>, 
   })
 
   // BaseModel properties
-  const asBaseModel = defineProperties(data, {
-    __servicePath: servicePath,
+  const asBaseModel = defineValues(data, {
+    __isBaseInstance: true,
     __isClone,
-    __idField: store.idField,
-    __tempId: (data[store.idField] == null && data.__tempId == null) ? new ObjectID().toString() : (data.__tempId || undefined),
-    getClone(this: M) {
+    __idField: idField,
+    __tempId: data[idField] == null && data.__tempId == null ? new ObjectID().toString() : data.__tempId || undefined,
+    hasClone(this: M) {
       const id = this[this.__idField] || this.__tempId
-      const item = store.clonesById[id]
-      return item ? setupInstance(item) : null
+      const item = clonesById[id]
+      return item || null
     },
     clone(this: M, data: Partial<M> = {}, options: CloneOptions = {}) {
-      const item = store.clone(this, data, options)
-      return setupInstance(item)
+      const item = clone(this, data, options)
+      return item
     },
     commit(this: M, data: Partial<M> = {}) {
-      const item = store.commit(this, data, options)
-      return setupInstance(item)
+      const item = commit(this, data)
+      return item
     },
     reset(this: M, data: Partial<M> = {}) {
-      const item = store.reset(this, data, options)
-      return setupInstance(item)
+      const item = reset(this, data)
+      return item
     },
-    addToStore(this: M) {
-      const item = store.addToStore(this)
-      return setupInstance(item)
+    createInStore(this: M) {
+      const item = createInStore(this)
+      return item
     },
     removeFromStore(this: M) {
-      const item = store.removeFromStore(this)
-      return setupInstance(item)
+      const item = removeFromStore(this)
+      return item
     },
   }) as M & BaseModelData & BaseModelInstanceProps<M>
 

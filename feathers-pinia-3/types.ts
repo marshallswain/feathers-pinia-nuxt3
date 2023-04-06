@@ -1,16 +1,16 @@
-import type { Ref } from 'vue-demi'
-import type { Params as FeathersParams } from '@feathersjs/feathers'
-import type { PaginationStateQuery } from './use-service'
+import type { Params as FeathersParams, Id } from '@feathersjs/feathers'
+import type { MaybeRef } from '@vueuse/core'
+import type { FeathersInstance } from './modeling'
+import type { PaginationStateQuery } from './use-data-store'
 
-export type MaybeRef<T> = T | Ref<T>
 export type MaybeArray<T> = T | T[]
 export type AnyData = Record<string, any>
 export type AnyDataOrArray<M extends AnyData> = MaybeArray<M>
 
 export interface Filters {
   $sort?: { [prop: string]: -1 | 1 }
-  $limit?: number
-  $skip?: number
+  $limit?: MaybeRef<number>
+  $skip?: MaybeRef<number>
   $select?: string[]
 }
 export interface Query extends Filters, AnyData {}
@@ -28,10 +28,19 @@ export interface QueryInfo {
   query: Query
   queryId: string
   queryParams: Query
-  pageParams: { $limit: number; $skip: number | undefined } | undefined
+  pageParams: { $limit: MaybeRef<number>; $skip: MaybeRef<number> | undefined } | undefined
   pageId: string | undefined
   isExpired: boolean
 }
+
+export interface QueryInfoExtended extends QueryInfo {
+  ids: Id[]
+  items: FeathersInstance<AnyData>[]
+  total: number
+  queriedAt: number
+  queryState: PaginationStateQuery
+}
+export type ExtendedQueryInfo = QueryInfoExtended | null
 
 export type DiffDefinition = undefined | string | string[] | Record<string, any> | false
 
@@ -49,7 +58,8 @@ export interface Params<Q extends Query> extends FeathersParams<Q> {
   temps?: boolean
   clones?: boolean
   qid?: string
-  skipRequestIfExists?: boolean
+  ssr?: boolean
+  skipGetIfExists?: boolean
   data?: any
   preserveSsr?: boolean
 }
@@ -91,54 +101,3 @@ export interface MakeCopyOptions {
 }
 
 export type ById<M> = Record<string | number | symbol, M>
-
-/* useFind & useGet */
-
-export interface UseFindPage {
-  limit: Ref<number>
-  skip: Ref<number>
-}
-
-export interface UseFindGetDeps {
-  store: any
-  service: any
-}
-
-export interface UseFindParams extends Params<Query> {
-  query: Query
-  paginateOnServer?: boolean
-  qid?: string
-  debounce?: number
-  immediate?: boolean
-  watch?: boolean
-}
-
-export interface UseGetParams extends Params<Query> {
-  query?: Query
-  immediate?: boolean
-  watch?: boolean
-}
-
-interface QueryPagination {
-  $limit: number
-  $skip: number
-}
-
-export interface MostRecentQuery {
-  pageId: string
-  pageParams: QueryPagination
-  queriedAt: number
-  query: Query
-  queryId: string
-  queryParams: Query
-  total: number
-}
-
-export interface CurrentQuery<M extends AnyData> extends MostRecentQuery {
-  qid: string
-  ids: number[]
-  items: M[]
-  total: number
-  queriedAt: number
-  queryState: PaginationStateQuery
-}

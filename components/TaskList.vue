@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Tasks } from 'feathers-pinia-api'
-import type { FeathersInstance } from '~~/feathers-pinia-3/modeling/types'
+import type { FeathersInstance } from 'feathers-pinia'
+
 const { api } = useFeathers()
 
 const { data: tasks } = api.service('tasks').findInStore({ query: {} })

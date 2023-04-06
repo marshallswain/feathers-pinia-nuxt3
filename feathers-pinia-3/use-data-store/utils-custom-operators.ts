@@ -33,7 +33,7 @@ const $notILike = (params: any, ownerQuery: any, options: any) => {
   return createEqualsOperation((value: any) => !iLike(value, params), ownerQuery, options)
 }
 
-export const operations = {
+export const sqlOperations = {
   $like,
   $notLike,
   $notlike: $notLike,

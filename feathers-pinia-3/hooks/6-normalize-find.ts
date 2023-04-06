@@ -13,12 +13,10 @@ export const normalizeFind = () => async (context: HookContext, next?: NextFunct
     const { params } = context
     const { query = {} } = params
     const isPaginated = params.paginate === true || hasOwn(query, '$limit') || hasOwn(query, '$skip')
-    if (isPaginated)
-      params.paginate = { default: true }
+    if (isPaginated) params.paginate = { default: true }
   }
 
-  if (next)
-    await next()
+  if (next) await next()
 
   if (context.method === 'find' && !context.result.data) {
     // context.result = { data: context.result }

@@ -8,7 +8,7 @@ import { OFetch } from 'feathers-pinia'
 // socket.io imports for the browser
 import socketio from '@feathersjs/socketio-client'
 import io from 'socket.io-client'
-import { createVueClient } from '~~/feathers-pinia-3/create-vue-client'
+import { createPiniaClient } from '~~/feathers-pinia-3'
 
 /**
  * Creates a Feathers Rest client for the SSR server and a Socket.io client for the browser.
@@ -33,16 +33,18 @@ export default defineNuxtPlugin(async (nuxt) => {
 
   // create the api client
   const feathers = createClient(connection, { storage, storageKey })
-  const api = createVueClient(feathers, {
+  const api = createPiniaClient(feathers, {
     pinia: nuxt.$pinia,
     idField: '_id',
     ssr: !!process.server,
     whitelist: ['$regex'],
     paramsForServer: [],
     services: {
-      users: {},
+      users: {
+        setupInstance: setupUser,
+      },
       tasks: {
-        skipRequestIfExists: true,
+        skipGetIfExists: true,
       },
     },
   })

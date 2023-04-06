@@ -1,11 +1,17 @@
+import type { MaybeRef } from '@vueuse/core'
+import type { Ref } from 'vue-demi'
 import { _ } from '@feathersjs/commons'
+import { unref } from 'vue-demi'
 import stringify from 'fast-json-stable-stringify'
 import isEqual from 'fast-deep-equal'
 import fastCopy from 'fast-copy'
-import { unref } from 'vue-demi'
-import type { AnyData, AnyDataOrArray, DiffDefinition, MaybeRef, Params, Query, QueryInfo } from './types'
+import type { AnyData, AnyDataOrArray, DiffDefinition, Params, Query, QueryInfo } from '../types'
+import { defineValues } from './define-properties'
+import { convertData } from './convert-data'
+import { deepUnref } from './deep-unref'
 
-export function getQueryInfo(params: Params<Query>): QueryInfo {
+export function getQueryInfo(_params: Params<Query>): QueryInfo {
+  const params = deepUnref(_params)
   const { query = {} } = params
   const qid = params.qid || 'default'
   const $limit = query?.$limit
@@ -28,7 +34,33 @@ export function getQueryInfo(params: Params<Query>): QueryInfo {
   }
 }
 
-export const hasOwn = (obj: AnyData, prop: string) => Object.prototype.hasOwnProperty.call(obj, prop)
+interface GetExtendedQueryInfoOptions {
+  queryInfo: QueryInfo
+  service: any
+  store: any
+  qid: Ref<string>
+}
+export function getExtendedQueryInfo({ queryInfo, service, store, qid }: GetExtendedQueryInfoOptions) {
+  const qidState: any = store.pagination[qid.value]
+  const queryState = qidState[queryInfo.queryId]
+  if (!queryState)
+    return null
+
+  const { total } = queryState
+  const pageState = queryState[queryInfo.pageId as string]
+  if (!pageState)
+    return null
+
+  const { ids, queriedAt, ssr } = pageState
+  const result = Object.values(_.pick(store.itemsById, ...ids))
+  const items = convertData(service, result)
+  const info = { ...queryInfo, ids, items, total, queriedAt, queryState, ssr }
+  return info || null
+}
+
+export function hasOwn(obj: AnyData, prop: string) {
+  return Object.prototype.hasOwnProperty.call(obj, prop)
+}
 
 /**
  *
@@ -76,20 +108,6 @@ export function diff(original: AnyData, clone: AnyData, diffDef: DiffDefinition)
 }
 
 /**
- * Defines all provided properties as non-enumerable and configurable
- */
-export const defineProperties = <M extends AnyData, D extends AnyData>(data: M, properties: D) => {
-  Object.keys(properties).forEach((key) => {
-    Object.defineProperty(data, key, {
-      enumerable: false,
-      configurable: true,
-      value: properties[key],
-    })
-  })
-  return data
-}
-
-/**
  * Restores tempIds to the records returned from the server. The tempIds need to be
  * temporarily put back in place in order to migrate the objects from the tempsById
  * into the itemsById. A shallow copy of the object
@@ -108,7 +126,7 @@ export function restoreTempIds(data: AnyDataOrArray<any>, resData: AnyDataOrArra
   responseItems.forEach((item: any, index: number) => {
     const tempId = sourceItems[index][tempIdField]
     if (tempId)
-      defineProperties(item, { [tempIdField]: tempId })
+      defineValues(item, { [tempIdField]: tempId })
   })
 
   return isArray ? responseItems : responseItems[0]
@@ -151,4 +169,8 @@ export function getParams(params?: MaybeRef<Params<Query>>): Params<Query> {
     return {}
 
   return fastCopy(unref(params))
+}
+
+export function timeout(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }

@@ -1,11 +1,17 @@
 import type { Id } from '@feathersjs/feathers'
-import { computed, ref, unref, watch } from 'vue-demi'
 import type { ComputedRef } from 'vue-demi'
-import type { AnyData, MaybeRef, UseFindGetDeps, UseGetParams } from './types'
+import type { AnyData } from '../types'
+import type { UseFindGetDeps, UseGetParams } from './types'
+import type { MaybeRef } from '@vueuse/core'
+import { computed, ref, unref, watch, isRef } from 'vue-demi'
 
 type MaybeComputed<M> = ComputedRef<M> | MaybeRef<M>
 
-export const useGet = (_id: MaybeComputed<Id | null>, _params: MaybeRef<UseGetParams> = ref({}), deps: UseFindGetDeps) => {
+export const useGet = (
+  _id: MaybeComputed<Id | null>,
+  _params: MaybeRef<UseGetParams> = ref({}),
+  deps: UseFindGetDeps,
+) => {
   const { store, service } = deps
 
   // normalize args into refs
@@ -52,11 +58,9 @@ export const useGet = (_id: MaybeComputed<Id | null>, _params: MaybeRef<UseGetPa
     const _id = unref(id)
     const _params = unref(params)
 
-    if (!queryWhenFn())
-      return
+    if (!queryWhenFn()) return
 
-    if (_id == null)
-      return null
+    if (_id == null) return null
 
     requestCount.value++
     hasBeenRequested.value = true // never resets
@@ -67,31 +71,33 @@ export const useGet = (_id: MaybeComputed<Id | null>, _params: MaybeRef<UseGetPa
       const response = await service.get(_id, _params)
 
       // Keep a list of retrieved ids
-      if (response && _id)
-        ids.value.push(_id)
+      if (response && _id) ids.value.push(_id)
 
       return response
-    }
-    catch (err: any) {
+    } catch (err: any) {
       error.value = err
-      throw err
-    }
-    finally {
+    } finally {
       isPending.value = false
     }
   }
 
   async function makeRequest() {
     request.value = get()
-    await request.value
+    const val = await request.value
+    return val
   }
 
   // Watch the id
   if (_watch)
-    watch(id, async () => { await makeRequest() }, { immediate })
+    watch(
+      id,
+      async () => {
+        await makeRequest()
+      },
+      { immediate },
+    )
 
   return {
-    id, // Ref<Id | null>
     params, // Ref<GetClassParams>
     isSsr, // ComputedRef<boolean>
 

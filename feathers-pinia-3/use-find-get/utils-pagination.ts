@@ -1,14 +1,15 @@
 import type { Ref } from 'vue-demi'
 import { computed } from 'vue-demi'
+import { timeout } from '../utils'
 
 interface Options {
   limit: Ref<number>
   skip: Ref<number>
   total: Ref<number>
-  request: any
+  request?: any
 }
 
-export const usePageData = (options: Options) => {
+export function usePageData(options: Options) {
   const { limit, skip, total, request } = options
   /**
    * The number of pages available based on the results returned in the latestQuery prop.
@@ -42,15 +43,35 @@ export const usePageData = (options: Options) => {
     return currentPage.value < pageCount.value
   })
 
-  const awaitRequest = async () => {
-    if (request.value)
+  const wait = async () => {
+    if (request?.value)
       await request.value
   }
-  const toStart = () => awaitRequest().then(() => (currentPage.value = 1))
-  const toEnd = () => awaitRequest().then(() => (currentPage.value = pageCount.value))
-  const toPage = (page: number) => awaitRequest().then(() => (currentPage.value = page))
-  const next = () => awaitRequest().then(() => currentPage.value++)
-  const prev = () => awaitRequest().then(() => currentPage.value--)
+  const toStart = async () => {
+    currentPage.value = 1
+    await timeout(0)
+    return wait()
+  }
+  const toEnd = async () => {
+    currentPage.value = pageCount.value
+    await timeout(0)
+    return wait()
+  }
+  const toPage = async (page: number) => {
+    currentPage.value = page
+    await timeout(0)
+    return wait()
+  }
+  const next = async () => {
+    currentPage.value++
+    await timeout(0)
+    return wait()
+  }
+  const prev = async () => {
+    currentPage.value--
+    await timeout(0)
+    return wait()
+  }
 
   return { pageCount, currentPage, canPrev, canNext, toStart, toEnd, toPage, next, prev }
 }
