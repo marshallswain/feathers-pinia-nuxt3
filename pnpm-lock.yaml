@@ -6,7 +6,7 @@ dependencies:
     version: 5.0.3
   nuxt-feathers-pinia:
     specifier: ^0.0.1
-    version: 0.0.1(feathers-pinia@3.0.0-pre.2)
+    version: 0.0.1(feathers-pinia@3.0.0-pre.3)
   ofetch:
     specifier: ^1.0.1
     version: 1.0.1
@@ -103,8 +103,8 @@ devDependencies:
     specifier: ^3.0.1
     version: 3.0.1
   feathers-pinia:
-    specifier: 3.0.0-pre.2
-    version: 3.0.0-pre.2(pinia@2.0.33)(vue@3.2.47)
+    specifier: 3.0.0-pre.3
+    version: 3.0.0-pre.3(pinia@2.0.33)(vue@3.2.47)
   feathers-pinia-api:
     specifier: http://localhost:3030/feathers-pinia-api-0.0.3.tgz
     version: '@localhost+3030/feathers-pinia-api-0.0.3.tgz'
@@ -5378,8 +5378,8 @@ packages:
     dependencies:
       reusify: 1.0.4
 
-  /feathers-pinia@3.0.0-pre.2(pinia@2.0.33)(vue@3.2.47):
-    resolution: {integrity: sha512-h1xyrSiUZwoKnUxo6PdeGqVnMF2ghFVwCPaArm9jNReQGq/YpAGt+2ePRuWcV859s1ajMemZP2iOvZQ5dZB7EQ==}
+  /feathers-pinia@3.0.0-pre.3(pinia@2.0.33)(vue@3.2.47):
+    resolution: {integrity: sha512-+2M8/JmN3LOOpOekP1dQzlABNhJrqKugXQ33BOvIY8etGIeBOAlQJgqVWr0ck2YA3CcrPbdP7tKExRPDArSvJA==}
     peerDependencies:
       '@vue/composition-api': ^1.4.0
       pinia: ^2.0.0
@@ -7678,13 +7678,13 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /nuxt-feathers-pinia@0.0.1(feathers-pinia@3.0.0-pre.2):
+  /nuxt-feathers-pinia@0.0.1(feathers-pinia@3.0.0-pre.3):
     resolution: {integrity: sha512-b5R1AM3hILy9Uky5beMh6fIyvRF3KbCH29VLlBCe4hyeptMzGARkX1qpGKFS6ImaPjUL2a1O4T6mWbmZMT9T6w==}
     peerDependencies:
       feathers-pinia: ^2.0.0-pre.4
     dependencies:
       '@nuxt/kit': 3.3.1
-      feathers-pinia: 3.0.0-pre.2(pinia@2.0.33)(vue@3.2.47)
+      feathers-pinia: 3.0.0-pre.3(pinia@2.0.33)(vue@3.2.47)
     transitivePeerDependencies:
       - rollup
       - supports-color
