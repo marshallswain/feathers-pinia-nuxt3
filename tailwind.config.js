@@ -1,4 +1,3 @@
-import defaultTheme from 'tailwindcss/defaultTheme'
 const { addDynamicIconSelectors } = require('@iconify/tailwind')
 const FormKitVariants = require('@formkit/themes/tailwindcss')
 
@@ -18,7 +17,6 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: defaultTheme.colors.green,
       },
     },
   },

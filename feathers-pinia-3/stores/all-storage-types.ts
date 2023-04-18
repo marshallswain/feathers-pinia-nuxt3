@@ -1,7 +1,6 @@
-import type { AnyData } from '../types'
-import type { MakeCopyOptions } from '../types'
+import type { AnyData, MakeCopyOptions } from '../types'
 import fastCopy from 'fast-copy'
-import { defineValues, getArray } from '../utils'
+import { defineValues } from '../utils'
 import { useServiceTemps } from './temps'
 import { useServiceClones } from './clones'
 import { useServiceStorage } from './storage'
@@ -70,6 +69,7 @@ export const useAllStorageTypes = <M extends AnyData>(options: UseAllStorageOpti
    */
   const addItemToStorage = (item: M) => {
     const id = getIdField(item)
+    item = setupInstance(item)
 
     if (item.__isClone) return cloneStorage.merge(item)
     else if (id != null && item.__tempId != null) return moveTempToItems(item)

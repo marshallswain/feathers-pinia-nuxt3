@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Contacts } from 'feathers-pinia-api'
-import type { FeathersInstance } from 'feathers-pinia'
+import type { FeathersInstance } from '~~/feathers-pinia-3'
 
 interface Props {
   contact: FeathersInstance<Contacts>

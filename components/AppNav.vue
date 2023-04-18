@@ -2,7 +2,7 @@
 const authStore = useAuthStore()
 const router = useRouter()
 
-const logout = async () => {
+async function logout() {
   await authStore.logout()
   router.push('/')
 }
@@ -39,6 +39,13 @@ const logout = async () => {
           <DaisyButton :primary="isActive" class="transition-all duration-300 gap-2 btn-sm sm:btn-md" @click="navigate">
             <i class="icon-[feather--users] text-xl" />
             <span class="hidden lg:inline-block">Contacts</span>
+          </DaisyButton>
+        </NuxtLink>
+
+        <NuxtLink v-slot="{ navigate, isActive }" to="/app/tweets" custom>
+          <DaisyButton :primary="isActive" class="transition-all duration-300 gap-2 btn-sm sm:btn-md" @click="navigate">
+            <i class="icon-[feather--twitter] text-xl" />
+            <span class="hidden lg:inline-block">Tweets</span>
           </DaisyButton>
         </NuxtLink>
       </DaisyButtonGroup>

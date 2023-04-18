@@ -1,6 +1,6 @@
 import type { Ref } from 'vue-demi'
 import type { AnyData, Params, Query } from '../types'
-import type { MostRecentQuery, PaginationStateQuery } from '../use-data-store/types'
+import type { MostRecentQuery, PaginationStateQuery } from '../stores/types'
 
 export interface UseFindPage {
   limit: Ref<number>
@@ -8,7 +8,6 @@ export interface UseFindPage {
 }
 
 export interface UseFindGetDeps {
-  store: any
   service: any
 }
 
@@ -18,7 +17,7 @@ export interface UseFindParams extends Params<Query> {
 }
 
 export interface UseFindOptions {
-  paginateOnServer?: boolean
+  paginateOn?: 'client' | 'server' | 'hybrid'
   pagination?: UseFindPage
   debounce?: number
   immediate?: boolean

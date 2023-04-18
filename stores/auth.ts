@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { useAuth } from 'feathers-pinia'
+import { useAuth } from '~~/feathers-pinia-3'
 
 // stores/auth.ts
 

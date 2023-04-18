@@ -41,7 +41,7 @@ const sidebarParams = computed(() => {
   return { query }
 })
 const service = api.service('contacts')
-const info = service.useFind(sidebarParams, { pagination: { limit, skip }, paginateOnServer: true, debounce: 10 })
+const info = service.useFind(sidebarParams, { pagination: { limit, skip }, paginateOn: 'hybrid', debounce: 10 })
 const { data: sidebarContacts, total, currentPage, pageCount, haveBeenRequested, request, isPending, haveLoaded, next, prev, canNext, canPrev, isSsr, toStart, toEnd } = info
 
 if (isSsr.value)
@@ -116,7 +116,7 @@ watch(() => shouldShowExtra.value, (val) => {
             </DaisyInputGroup>
 
             <div class="min-h-[360px]">
-              <div v-auto-animate="{ duration: 250 }" class="pb-6">
+              <div class="pb-6">
                 <div v-if="isExtraVisible">
                   <DaisyMenuTitle>
                     <span>current item</span>
@@ -138,7 +138,7 @@ watch(() => shouldShowExtra.value, (val) => {
                 <i v-if="isPending" class="absolute right-0 h-6 w-6 icon-[svg-spinners--180-ring-with-bg]" />
               </DaisyMenuTitle>
 
-              <div v-auto-animate="{ duration: 250 }">
+              <div>
                 <template v-for="contact in sidebarContacts" :key="contact?._id">
                   <NuxtLink v-slot="{ navigate, isActive }" :to="`/app/contacts/${contact?._id}`" custom>
                     <ContactsMenuItem

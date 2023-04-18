@@ -1,15 +1,21 @@
 import type { Application, FeathersService } from '@feathersjs/feathers'
-import type { HandleEvents } from './use-data-store'
+import type { HandleEvents } from './stores'
 import type { AnyData } from './types'
 import { feathers } from '@feathersjs/feathers'
 import { defineStore } from 'pinia'
 import { PiniaService } from './create-pinia-service'
-import { useDataStore } from './use-data-store'
+import { useServiceStore, useServiceEvents } from './stores'
 import { feathersPiniaHooks } from './hooks'
-import { useServiceEvents } from './use-data-store'
-import { useFeathersInstance } from './modeling'
+import { storeAssociated, useServiceInstance } from './modeling'
+import { defineGetters } from './utils'
 
-interface ServiceOptions {
+interface SetupInstanceUtils {
+  app?: any
+  service?: any
+  servicePath?: string
+}
+
+interface PiniaServiceConfig {
   idField?: string
   whitelist?: string[]
   paramsForServer?: string[]
@@ -17,27 +23,32 @@ interface ServiceOptions {
   handleEvents?: HandleEvents<AnyData>
   debounceEventsTime?: number
   debounceEventsGuarantee?: boolean
-  setupInstance?: (data: any) => any
+  setupInstance?: (data: any, utils: SetupInstanceUtils) => any
+  customizeStore?: (data: ReturnType<typeof useServiceStore>) => Record<string, any>
   customSiftOperators?: Record<string, any>
 }
 
-interface CreateVueClientOptions extends ServiceOptions {
+interface CreatePiniaClientConfig extends PiniaServiceConfig {
   idField: string
   pinia: any
   ssr?: boolean
-  services?: Record<string, ServiceOptions>
-  setupInstance?: (data: any) => any
+  services?: Record<string, PiniaServiceConfig>
 }
 
 type CreatePiniaServiceTypes<T extends { [key: string]: FeathersService }> = {
   [Key in keyof T]: PiniaService<T[Key]>
 }
 
+interface AppExtensions {
+  storeAssociated: (data: any, config: Record<string, string>) => void
+}
+
 export function createPiniaClient<Client extends Application>(
   client: Client,
-  options: CreateVueClientOptions,
-): Application<CreatePiniaServiceTypes<Client['services']>> {
+  options: CreatePiniaClientConfig,
+): Application<CreatePiniaServiceTypes<Client['services']>> & AppExtensions {
   const vueApp = feathers()
+
   vueApp.defaultService = function (location: string) {
     const serviceOptions = options.services?.[location] || {}
 
@@ -57,12 +68,32 @@ export function createPiniaClient<Client extends Application>(
       serviceOptions.customSiftOperators || {},
       options.customSiftOperators || {},
     )
-    const setupInstance = serviceOptions.setupInstance || options.setupInstance || ((data: any) => data)
+    function customizeStore(utils: any) {
+      const fromGlobal = Object.assign(utils, options.customizeStore ? options.customizeStore(utils) : utils)
+      const fromService = Object.assign(
+        fromGlobal,
+        serviceOptions.customizeStore ? serviceOptions.customizeStore(fromGlobal) : fromGlobal,
+      )
+      return fromService
+    }
+
+    function wrappedSetupInstance(data: any) {
+      const asFeathersModel = useServiceInstance(data, {
+        service: vueApp.service(location),
+        store,
+      })
+
+      // call the provided `setupInstance`
+      const utils = { app: vueApp, service: vueApp.service(location), servicePath: location }
+      const fromGlobal = options.setupInstance ? options.setupInstance(asFeathersModel, utils) : asFeathersModel
+      const serviceLevel = serviceOptions.setupInstance ? serviceOptions.setupInstance(data, utils) : fromGlobal
+      return serviceLevel
+    }
 
     // create pinia store
     const storeName = `service:${location}`
     const useStore = defineStore(storeName, () => {
-      const utils = useDataStore({
+      const utils = useServiceStore({
         idField,
         whitelist,
         paramsForServer,
@@ -70,21 +101,13 @@ export function createPiniaClient<Client extends Application>(
         ssr: options.ssr,
         setupInstance: wrappedSetupInstance,
       })
-      return utils
+      const custom = customizeStore(utils)
+      return { ...utils, ...custom }
     })
     const store = useStore(options.pinia)
 
     const clientService = client.service(location)
     const piniaService = new PiniaService(clientService, { store, servicePath: location })
-
-    function wrappedSetupInstance(data: any) {
-      const asFeathersModel = useFeathersInstance(data, {
-        service: vueApp.service(location),
-        store,
-      })
-      const withSetup = setupInstance(asFeathersModel)
-      return withSetup
-    }
 
     useServiceEvents({
       service: piniaService,
@@ -97,34 +120,29 @@ export function createPiniaClient<Client extends Application>(
   }
 
   // register hooks on every service
-  vueApp.mixins.push((service: any) => {
+  const mixin: any = (service: any) => {
     service.hooks({
       around: feathersPiniaHooks(),
     })
-  })
+  }
+  vueApp.mixins.push(mixin)
 
-  Object.defineProperties(vueApp, {
-    authentication: {
-      get() {
-        return (client as any).authentication
-      },
+  defineGetters(vueApp, {
+    authentication() {
+      return (client as any).authentication
     },
-    authenticate: {
-      get() {
-        return (client as any).authenticate
-      },
+    authenticate() {
+      return (client as any).authenticate
     },
-    reAuthenticate: {
-      get() {
-        return (client as any).reAuthenticate
-      },
+    reAuthenticate() {
+      return (client as any).reAuthenticate
     },
-    logout: {
-      get() {
-        return (client as any).logout
-      },
+    logout() {
+      return (client as any).logout
     },
   })
 
-  return vueApp
+  Object.assign(vueApp, { storeAssociated })
+
+  return vueApp as Application<CreatePiniaServiceTypes<Client['services']>> & AppExtensions
 }

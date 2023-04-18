@@ -1,24 +1,24 @@
-import type { CloneOptions } from '../use-data-store'
-import type { AnyData, ById } from '../types'
-import type { BaseModelData, BaseModelInstanceProps, ModelInstanceData } from './types'
+import type { CloneOptions } from '../stores'
+import type { AnyData, ById, Params } from '../types'
+import type { BaseModelData, StoreInstanceProps, ModelInstanceData } from './types'
 import ObjectID from 'isomorphic-mongo-objectid'
 import { defineValues } from '../utils/define-properties'
 
-interface UseModelInstanceOptions<M> {
+interface UseModelInstanceOptions<M, Q extends AnyData> {
   idField: string
   clonesById: ById<AnyData>
   clone: (item: M, data?: {}, options?: CloneOptions) => M
   commit: (item: M, data?: Partial<M>) => M
   reset: (item: M, data?: {}) => M
   createInStore: (data: M | M[]) => M | M[]
-  removeFromStore: (data: M | M[]) => M | M[]
+  removeFromStore: (data: M | M[] | null, params?: Params<Q>) => M | M[] | null
 }
 
-export const useModelInstance = <M extends AnyData>(
+export const useModelInstance = <M extends AnyData, Q extends AnyData>(
   data: ModelInstanceData<M>,
-  options: UseModelInstanceOptions<M>,
+  options: UseModelInstanceOptions<M, Q>,
 ) => {
-  if (data.__isBaseInstance) return data
+  if (data.__isStoreInstance) return data
 
   const { idField, clonesById, clone, commit, reset, createInStore, removeFromStore } = options
   const __isClone = data.__isClone || false
@@ -34,7 +34,7 @@ export const useModelInstance = <M extends AnyData>(
 
   // BaseModel properties
   const asBaseModel = defineValues(data, {
-    __isBaseInstance: true,
+    __isStoreInstance: true,
     __isClone,
     __idField: idField,
     __tempId: data[idField] == null && data.__tempId == null ? new ObjectID().toString() : data.__tempId || undefined,
@@ -63,7 +63,7 @@ export const useModelInstance = <M extends AnyData>(
       const item = removeFromStore(this)
       return item
     },
-  }) as M & BaseModelData & BaseModelInstanceProps<M>
+  }) as M & BaseModelData & StoreInstanceProps<M>
 
   return asBaseModel
 }

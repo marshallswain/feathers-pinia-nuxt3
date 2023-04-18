@@ -1,4 +1,5 @@
 export * from './types'
 
-export { useFeathersInstance } from './use-feathers-instance'
+export { useServiceInstance } from './use-feathers-instance'
 export { useModelInstance } from './use-model-instance'
+export { storeAssociated } from './store-associated'

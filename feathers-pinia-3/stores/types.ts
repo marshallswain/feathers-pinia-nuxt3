@@ -115,7 +115,7 @@ export interface HandleFindErrorOptions<Q extends Query> {
 
 interface Association {
   name: string
-  Model: any
+  service: any
   type: 'find' | 'get'
 }
 export type BaseModelAssociations = Record<string, Association>
@@ -245,8 +245,8 @@ export type HandleEventsFunction<M extends AnyData> = (item: M, ctx: { model: M;
 
 export type HandleEvents<M extends AnyData> =
   | {
-    [event in HandledEvents]: HandleEventsFunction<M>
-  }
+      [event in HandledEvents]: HandleEventsFunction<M>
+    }
   | boolean
 
 export type onReadFn<M extends AnyData> = (item: M) => M | Partial<M>

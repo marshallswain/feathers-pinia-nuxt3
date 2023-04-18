@@ -1,3 +1,4 @@
+import { MaybeRef } from '@vueuse/core'
 import type { Id } from '@feathersjs/feathers'
 import { _ } from '@feathersjs/commons'
 import { computed, unref } from 'vue-demi'
@@ -21,7 +22,22 @@ interface UseServiceLocalOptions<M extends AnyData> {
 }
 
 const FILTERS = ['$sort', '$limit', '$skip', '$select']
-const additionalOperators = ['$elemMatch']
+const additionalOperators = [
+  '$in',
+  '$nin',
+  '$exists',
+  'eq',
+  'ne',
+  '$mod',
+  '$all',
+  '$not',
+  '$size',
+  '$type',
+  '$regex',
+  '$options',
+  '$where',
+  '$elemMatch',
+]
 
 export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: UseServiceLocalOptions<M>) {
   const {
@@ -39,10 +55,7 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
 
   /** @private */
   const _filterQueryOperators = computed(() => {
-    return additionalOperators
-      .concat(whitelist || [])
-      .concat(['$regex', '$options'])
-      .concat(Object.keys(operations))
+    return additionalOperators.concat(whitelist || []).concat(Object.keys(operations))
   })
 
   const filterItems = (params: Params<Q>, startingValues: M[] = []) => {
@@ -55,24 +68,21 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
     })
     let values = startingValues.concat(itemStorage.list.value)
 
-    if (tempStorage && params.temps)
-      values.push(...tempStorage.list.value)
+    if (tempStorage && params.temps) values.push(...tempStorage.list.value)
 
-    if (filters.$or)
-      query.$or = filters.$or
+    if (filters.$or) query.$or = filters.$or
 
-    if (filters.$and)
-      query.$and = filters.$and
+    if (filters.$and) query.$and = filters.$and
 
     values = values.filter(sift(query, { operations }))
     return { values, filters }
   }
 
-  function findInStore(params: Params<Q>) {
+  function findInStore(_params: MaybeRef<Params<Q>>) {
     const result = computed(() => {
+      const params = unref(_params)
       // clean up any nested refs
-      if (params.query)
-        params.query = deepUnref(params.query)
+      if (params.query) params.query = deepUnref(params.query)
 
       const filtered = filterItems(params)
       const filters = filtered.filters
@@ -80,14 +90,11 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
 
       const total = values.length
 
-      if (filters.$sort)
-        values.sort(sorter(filters.$sort))
+      if (filters.$sort) values.sort(sorter(filters.$sort))
 
-      if (filters.$skip)
-        values = values.slice(filters.$skip)
+      if (filters.$skip) values = values.slice(filters.$skip)
 
-      if (typeof filters.$limit !== 'undefined')
-        values = values.slice(0, filters.$limit)
+      if (typeof filters.$limit !== 'undefined') values = values.slice(0, filters.$limit)
 
       return {
         total,
@@ -106,7 +113,7 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
     }
   }
 
-  function findOneInStore(params: Params<Q>) {
+  function findOneInStore(params: MaybeRef<Params<Q>>) {
     const result = findInStore(params)
     const item = computed(() => {
       return result.data.value[0] || null
@@ -114,12 +121,11 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
     return item
   }
 
-  function countInStore(params: Params<Q>) {
+  function countInStore(params: MaybeRef<Params<Q>>) {
     const value = computed(() => {
       params = { ...unref(params) }
 
-      if (!params.query)
-        throw new Error('params must contain a query object')
+      if (!params.query) throw new Error('params must contain a query object')
 
       params.query = _.omit(params.query, ...FILTERS)
       return findInStore(params).total.value
@@ -127,24 +133,21 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
     return value
   }
 
-  const getFromStore = (id: Id | null, params?: Params<Q>) => {
+  const getFromStore = (id: MaybeRef<Id | null>, params?: Params<Q>) => {
     return computed((): M | null => {
       id = unref(id)
       params = fastCopy(unref(params) || {})
-      if (params.query)
-        params.query = deepUnref(params.query)
+      if (params.query) params.query = deepUnref(params.query)
 
       let item = null
       const existingItem = itemStorage.getItem(id as Id) && select(params, idField)(itemStorage.getItem(id as Id))
-      const tempItem
-        = tempStorage && tempStorage.getItem(id as Id) && select(params, '__tempId')(tempStorage.getItem(id as Id))
+      const tempItem =
+        tempStorage && tempStorage.getItem(id as Id) && select(params, '__tempId')(tempStorage.getItem(id as Id))
 
-      if (existingItem)
-        item = existingItem
-      else if (tempItem)
-        item = tempItem
+      if (existingItem) item = existingItem
+      else if (tempItem) item = tempItem
 
-      const toReturn = (params.clones && item.clone) ? item.clone(undefined, { useExisting: true }) : (item || null)
+      const toReturn = params.clones && item.clone ? item.clone(undefined, { useExisting: true }) : item || null
       return toReturn
     })
   }
@@ -154,18 +157,66 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
    * @param data a single record or array of records.
    * @returns data added or modified in the store. If you pass an array, you get an array back.
    */
-  function createInStore(data: M | M[]): M | M[] {
-    const { items, isArray } = getArray(data)
+  function createInStore<N = MaybeRef<M | M[]>>(data: N): N {
+    const { items, isArray } = getArray(unref(data))
 
-    const _items = items.map((item: AnyData) => {
-      const stored = addItemToStorage(item as any)
+    const _items = items.map((item: N) => {
+      const stored = addItemToStorage(unref(item))
       return stored
     })
 
     return isArray ? _items : _items[0]
   }
 
-  function patchInStore() {}
+  // TODO
+  function patchInStore(
+    _idOrData: MaybeRef<M | M[] | Id | null>,
+    _data: MaybeRef<AnyData> = {},
+    _params: MaybeRef<Params<Q>> = {},
+  ) {
+    const idOrData = unref(_idOrData)
+    const data = unref(_data)
+    const params = unref(_params)
+
+    // patches provided items using the `data` from the closure scope.
+    function updateItems(items: any[]) {
+      const patched = items
+        .map((item: M | Id | null) => {
+          item = unref(item)
+          // convert ids to items from the store
+          if (typeof item === 'number' || typeof item === 'string') {
+            item = getFromStore(item as Id).value
+          }
+          if (item == null) return null
+
+          const toWrite = { ...item, ...data }
+          const stored = addItemToStorage(toWrite)
+          return stored
+        })
+        .filter((i) => i)
+      return patched
+    }
+
+    if (idOrData === null) {
+      // patching multiple cannot use an empty array
+      if (params?.query && !Object.keys(params?.query).length) {
+        throw new Error(
+          `cannot perform multiple patchInStore with an empty query. You must explicitly provide a query. To patch all items, try using a query that matches all items, like "{ id: { $exists: true } }"`,
+        )
+      }
+      // patch by query
+      const fromStore = findInStore(params).data.value
+      const items = updateItems(fromStore)
+
+      return items
+    } else {
+      // patch provided data
+      const { items, isArray } = getArray(idOrData)
+      const patchedItems = updateItems(items)
+
+      return isArray ? patchedItems : patchedItems[0]
+    }
+  }
 
   /**
    * If a clone is provided, it removes the clone from the store.
@@ -174,20 +225,30 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
    * If a string is provided, it removes any item, temp, or clone from the stores.
    * @param data
    */
-  function removeFromStore(data: M | M[]) {
+  function removeFromStore(data: M | M[] | null, params?: Params<Q>) {
+    if (data === null && params?.query && Object.keys(params?.query).length) {
+      const clones = cloneStorage ? cloneStorage.list.value : []
+      const { values } = filterItems(params, clones)
+      const result = removeItems(values)
+      return result
+    } else if (data !== null) {
+      removeItems(data)
+    }
+
+    return data
+  }
+
+  function removeItems(data: M | M[]) {
     const { items } = getArray(data)
     items.forEach((item: M) => {
       if (typeof item === 'string') {
         itemStorage.removeItem(item)
         tempStorage?.removeItem(item)
         cloneStorage?.removeItem(item)
-      }
-      else {
-        if ((item as M).__isClone)
-          return cloneStorage?.remove(item as M)
+      } else {
+        if ((item as M).__isClone) return cloneStorage?.remove(item as M)
 
-        if ((item as M).__isTemp)
-          return tempStorage?.remove(item as M)
+        if ((item as M).__isTemp) return tempStorage?.remove(item as M)
 
         itemStorage.remove(item)
         tempStorage?.remove(item)
@@ -195,13 +256,6 @@ export function useServiceLocal<M extends AnyData, Q extends AnyData>(options: U
       }
     })
     return data
-  }
-
-  function removeByQuery(params: Params<Q>) {
-    const clones = cloneStorage ? cloneStorage.list.value : []
-    const { values } = filterItems(params, clones)
-    const result = removeFromStore(values)
-    return result
   }
 
   return {

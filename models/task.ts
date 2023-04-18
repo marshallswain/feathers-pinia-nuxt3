@@ -1,5 +1,5 @@
 import type { Tasks } from 'feathers-pinia-api'
-import type { FeathersInstance } from 'feathers-pinia'
+import type { FeathersInstance } from '~~/feathers-pinia-3'
 
 export function setupTask(data: FeathersInstance<Tasks>): Record<string, any> {
   const defaults = {

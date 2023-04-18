@@ -1,13 +1,13 @@
 import type { Params as FeathersParams, FeathersService, Id } from '@feathersjs/feathers'
 import type { AnyData, Params, Query } from './types'
 import type { MaybeRef } from '@vueuse/core'
-import type { UseFindOptions, UseFindPage, UseFindParams, UseGetParams } from './use-find-get'
+import type { UseFindOptions, UseFindParams, UseGetParams } from './use-find-get'
 import type { ComputedRef } from 'vue-demi'
 import { reactive, computed, isRef, ref, unref } from 'vue-demi'
 import { getParams } from './utils'
 import { useFind, useGet } from './use-find-get'
 import { convertData } from './utils/convert-data'
-import { FeathersInstance } from './modeling'
+import { ServiceInstance } from './modeling'
 
 interface PiniaServiceOptions {
   servicePath: string
@@ -44,6 +44,8 @@ export class PiniaService<Svc extends FeathersService> {
 
   async findOne(_params?: MaybeRef<Params<Query>>) {
     const params = getParams(_params)
+    params.query = params.query || {}
+    params.query.$limit = 1
     const result = await this.service.find(params as FeathersParams)
     const item = (result.data || result)[0] || null
     return item
@@ -51,6 +53,8 @@ export class PiniaService<Svc extends FeathersService> {
 
   async count(_params?: MaybeRef<Params<Query>>) {
     const params = getParams(_params)
+    params.query = params.query || {}
+    params.query.$limit = 0
     const result = await this.service.find(params as FeathersParams)
     return result
   }
@@ -100,39 +104,33 @@ export class PiniaService<Svc extends FeathersService> {
     return result
   }
 
-  getFromStore(id: Id, params?: MaybeRef<Params<Query>>): ComputedRef<FeathersInstance<AnyData>> {
+  getFromStore(id: Id, params?: MaybeRef<Params<Query>>): ComputedRef<ServiceInstance<AnyData>> {
     const result = this.store.getFromStore(id, params)
-    const converted = computed(() => convertData(this, result.value) as FeathersInstance<AnyData>)
-    return converted
+    return result
   }
 
   createInStore(data: AnyData) {
-    const convertedInput = convertData(this, data)
-    const result = this.store.createInStore(convertedInput)
-    const converted = convertData(this, result)
-    return converted
+    const result = this.store.createInStore(data)
+    return result
   }
 
-  // TODO: Support multi patch with params
-  // patchInStore(id: Id, data: AnyData, _params?: MaybeRef<Params<Query>>) {
-  patchInStore(id: Id, data: AnyData) {
-    const item = id != null ? this.getFromStore(id) : null
-    const convertedInput = convertData(this, { ...item, ...data })
-    const result = this.store.addOrUpdate(convertedInput)
-    const converted = convertData(this, result)
-    return converted
+  patchInStore<M extends AnyData, Q extends AnyData>(
+    idOrData: MaybeRef<M | M[] | Id | null>,
+    data: MaybeRef<AnyData> = {},
+    params: MaybeRef<Params<Q>> = {},
+  ) {
+    const result = this.store.patchInStore(idOrData, data, params)
+    return result
   }
 
   removeFromStore(id?: Id, params?: MaybeRef<Params<Query>>) {
-    const item = id != null ? this.getFromStore(id) : null
+    const item = id != null ? this.getFromStore(id).value : null
     if (item) {
       const result = this.store.removeFromStore(item)
-      const converted = convertData(this, result)
-      return converted
+      return result
     } else if (id == null && unref(params)?.query) {
       const result = this.store.removeByQuery(params)
-      const converted = convertData(this, result)
-      return converted
+      return result
     }
   }
 
@@ -140,13 +138,13 @@ export class PiniaService<Svc extends FeathersService> {
 
   useFind(params: ComputedRef<UseFindParams | null>, options?: UseFindOptions) {
     const _params = isRef(params) ? params : ref(params)
-    return useFind(_params, options, { store: this.store, service: this })
+    return useFind(_params, options, { service: this })
   }
 
   useGet(id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams> = ref({})) {
     const _id = isRef(id) ? id : ref(id)
     const _params = isRef(params) ? params : ref(params)
-    return useGet(_id, _params, { store: this.store, service: this })
+    return useGet(_id, _params, { service: this })
   }
 
   useGetOnce(_id: MaybeRef<Id | null>, params: MaybeRef<UseGetParams> = {}) {
