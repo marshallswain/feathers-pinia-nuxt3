@@ -260,7 +260,6 @@ export function useFind(params: ComputedRef<UseFindParams | null>, options: UseF
   }
 
   if (paginateOn === 'server') {
-    console.log('onServer')
     // watch realtime events and re-query
     // TODO: only re-query when relevant
     service.on('created', () => {
