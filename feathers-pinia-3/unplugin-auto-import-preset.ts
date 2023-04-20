@@ -1,5 +1,5 @@
 export const feathersPiniaAutoImport = {
-  '~~/feathers-pinia-3': [
+  'feathers-pinia': [
     'useServiceInstance',
     'useInstanceDefaults',
     'useDataStore',

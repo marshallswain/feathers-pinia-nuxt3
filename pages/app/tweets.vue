@@ -17,7 +17,7 @@ const tweetParams = computed(() => {
   }
 })
 
-const { allLocalData: tweets, next, isSsr, request } = api.service('tweets').useFind(tweetParams, { paginateOn: 'hybrid' })
+const { data: tweets, next, isSsr, request, find } = api.service('tweets').useFind(tweetParams, { paginateOn: 'hybrid' })
 
 if (isSsr.value)
   await request.value
@@ -45,6 +45,10 @@ function createRandomTweets(count = 10) {
     </DaisyFlex>
 
     <DaisyFlex row items-center class="gap-3 w-1/3 ">
+      <DaisyButton square @click="find()">
+        Find
+      </DaisyButton>
+
       <DaisyButton @click="next()">
         Load More
       </DaisyButton>
