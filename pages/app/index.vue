@@ -6,7 +6,7 @@ definePageMeta({
   layout: 'app',
 })
 
-const logout = async () => {
+async function logout() {
   await authStore.logout()
   router.push('/')
 }

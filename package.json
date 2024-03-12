@@ -9,8 +9,14 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
+  "dependencies": {
+    "@feathersjs/commons": "^5.0.23",
+    "nuxt-feathers-pinia": "^0.1.0",
+    "ofetch": "^1.3.3",
+    "vue-demi": "^0.14.7"
+  },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.38.4",
+    "@antfu/eslint-config": "^2.8.1",
     "@faker-js/faker": "^7.6.0",
     "@feathersjs/authentication-client": "^5.0.23",
     "@feathersjs/client": "^5.0.23",
@@ -49,11 +55,5 @@
     "socket.io-client": "^4.7.4",
     "typescript": "^5.3.3",
     "vue": "^3.4.21"
-  },
-  "dependencies": {
-    "@feathersjs/commons": "^5.0.23",
-    "nuxt-feathers-pinia": "^0.1.0",
-    "ofetch": "^1.3.3",
-    "vue-demi": "^0.14.7"
   }
 }

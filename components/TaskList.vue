@@ -57,10 +57,10 @@ function handleNext(e: KeyboardEvent) {
 
       <hr class="border-t border-base-content/20">
 
-      <DaisyFlex ref="listEl" v-auto-animate col class="gap-1 py-1">
+      <DaisyFlex ref="listEl" col class="gap-1 py-1">
         <TaskListItem
           v-for="task in tasks"
-          :key="task._id"
+          :key="task._id?.toString()"
           :task="task"
           @prev="handlePrev"
           @next="handleNext"

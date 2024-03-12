@@ -1,7 +1,7 @@
 /**
  * Provides access to Feathers Clients throughout the app
  */
-export const useFeathers = () => {
+export function useFeathers() {
   const { $api } = useNuxtApp()
   return { api: $api }
 }
