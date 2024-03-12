@@ -7,8 +7,7 @@ import rest from '@feathersjs/rest-client'
 // socket.io imports for the browser
 import socketio from '@feathersjs/socketio-client'
 import io from 'socket.io-client'
-import { OFetch, createPiniaClient } from '~~/feathers-pinia-3'
-import { timeout } from '~/feathers-pinia-3/utils'
+import { OFetch, createPiniaClient, timeout } from 'feathers-pinia'
 
 /**
  * Creates a Feathers Rest client for the SSR server and a Socket.io client for the browser.

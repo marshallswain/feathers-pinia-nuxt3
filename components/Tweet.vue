@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Tweets } from 'feathers-pinia-api'
-import type { ServiceInstance } from '~~/feathers-pinia-3'
+import type { ServiceInstance } from 'feathers-pinia'
 
 const props = defineProps<{
   tweet: ServiceInstance<Tweets>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Tasks } from 'feathers-pinia-api'
-import type { FeathersInstance } from '~~/feathers-pinia-3'
+import type { ServiceInstance } from 'feathers-pinia'
 
 interface Props {
-  task: FeathersInstance<Partial<Tasks>>
+  task: ServiceInstance<Partial<Tasks>>
   initialFocus?: boolean
   isNew?: boolean
 }
