@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Contacts } from 'feathers-pinia-api'
-import type { FeathersInstance } from '~~/feathers-pinia-3'
+import type { ServiceInstance } from 'feathers-pinia'
 
 interface Props {
-  contact: FeathersInstance<Contacts>
+  contact: ServiceInstance<Contacts>
 }
 const props = defineProps<Props>()
 defineEmits(['openDrawer'])

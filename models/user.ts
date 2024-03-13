@@ -1,7 +1,7 @@
-import { type FeathersInstance, useInstanceDefaults } from '~~/feathers-pinia-3'
+import { type ServiceInstance, useInstanceDefaults } from 'feathers-pinia'
 import type { Users } from 'feathers-pinia-api'
 
-export const setupUser = (data: FeathersInstance<Users>) => {
+export function setupUser(data: ServiceInstance<Users>) {
   const defaults = {
     email: '',
     password: '',

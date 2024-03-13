@@ -40,7 +40,7 @@ function createRandomTweets(count = 10) {
 
     <TweetComposer class="mb-4" />
 
-    <DaisyFlex v-auto-animate col items-center class="gap-3 w-1/3">
+    <DaisyFlex col items-center class="gap-3 w-1/3">
       <Tweet v-for="tweet in tweets" :key="tweet._id" :tweet="tweet" />
     </DaisyFlex>
 

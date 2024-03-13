@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Tasks } from 'feathers-pinia-api'
-import type { FeathersInstance } from '~~/feathers-pinia-3'
+import type { ServiceInstance } from 'feathers-pinia'
 
 const { api } = useFeathers()
 
@@ -9,7 +9,7 @@ await api.service('tasks').find({ query: { $limit: 300 } })
 
 const newTask = ref(initTask())
 function initTask() {
-  return api.service('tasks').new({ description: '', isComplete: false }) as FeathersInstance<Tasks>
+  return api.service('tasks').new({ description: '', isComplete: false }) as ServiceInstance<Tasks>
 }
 watch(tasks, (val) => {
   const temp = val.find((i: any) => i.__isTemp)
@@ -57,10 +57,10 @@ function handleNext(e: KeyboardEvent) {
 
       <hr class="border-t border-base-content/20">
 
-      <DaisyFlex ref="listEl" v-auto-animate col class="gap-1 py-1">
+      <DaisyFlex ref="listEl" col class="gap-1 py-1">
         <TaskListItem
           v-for="task in tasks"
-          :key="task._id"
+          :key="task._id?.toString()"
           :task="task"
           @prev="handlePrev"
           @next="handleNext"

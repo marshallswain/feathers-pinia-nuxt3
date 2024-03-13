@@ -1,7 +1,7 @@
 /**
  * Returns a global configuration object for Feathers-Pinia
  */
-export const useFeathersPiniaConfig = () => {
+export function useFeathersPiniaConfig() {
   const { $pinia: pinia } = useNuxtApp()
   return {
     pinia,
